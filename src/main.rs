@@ -3,12 +3,15 @@
 #![no_main]
 
 use crate::board_support::io::uart_console::UartConsole;
-use core::intrinsics::{abort, volatile_load, volatile_store};
+use core::intrinsics::{abort};
 use core::panic::PanicInfo;
+use crate::common::mem::clear_region;
+use crate::board_support::mem::bss_section;
 
 mod arch;
 mod board_support;
 mod common;
+mod pointer_iter;
 
 global_asm!(
     r#"
@@ -25,6 +28,7 @@ _start:
 
 #[no_mangle]
 pub unsafe extern "C" fn kernel_main() -> ! {
+    clear_region(bss_section());
     UartConsole::init();
     println!("Hello, baby");
 
@@ -32,6 +36,6 @@ pub unsafe extern "C" fn kernel_main() -> ! {
 }
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    unsafe { abort() }
+unsafe fn panic(_info: &PanicInfo) -> ! {
+    abort()
 }

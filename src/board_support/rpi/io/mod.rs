@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use core::intrinsics::{volatile_load, volatile_store};
+use core::ptr::{write_volatile, read_volatile};
 
 pub mod uart_console;
 
@@ -33,9 +33,9 @@ const MBOX_STATUS: u32 = MBOX_BASE + 0x18;
 const MBOX_WRITE: u32 = MBOX_BASE + 0x20;
 
 fn mmio_write(reg: u32, val: u32) {
-    unsafe { volatile_store(reg as *mut u32, val) }
+    unsafe { write_volatile(reg as *mut u32, val) }
 }
 
 fn mmio_read(reg: u32) -> u32 {
-    unsafe { volatile_load(reg as *mut u32) }
+    unsafe { read_volatile(reg as *mut u32) }
 }

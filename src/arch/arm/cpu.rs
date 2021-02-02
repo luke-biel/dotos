@@ -1,9 +1,9 @@
-pub fn sleep(mut count: u32) {
+pub fn sleep(count: u32) {
     unsafe {
         asm!(r#"
         1:
             subs {0}, {0}, #1;
             bne 1b
-        "#, inout(reg) count);
+        "#, in(reg) count);
     }
 }

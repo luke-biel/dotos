@@ -1,5 +1,4 @@
 use core::fmt;
-use core::intrinsics::{volatile_load, volatile_store};
 
 use crate::arch::cpu;
 use crate::board_support::rpi::io::{
