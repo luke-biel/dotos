@@ -1,9 +1,10 @@
 use core::fmt;
 
 use crate::arch::cpu;
-use crate::board_support::rpi::io::{
-    mmio_read, mmio_write, GPPUD, GPPUDCLK0, UART0_CR, UART0_DR, UART0_FBRD, UART0_FR, UART0_IBRD,
-    UART0_ICR, UART0_IMSC, UART0_LCRH,
+use crate::board_support::rpi::io::{mmio_read, mmio_write};
+use crate::board_support::rpi::mem::{
+    GPPUD, GPPUDCLK0, UART0_CR, UART0_DR, UART0_FBRD, UART0_FR, UART0_IBRD, UART0_ICR, UART0_IMSC,
+    UART0_LCRH,
 };
 
 pub struct UartConsole;

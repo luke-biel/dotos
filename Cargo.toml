@@ -8,8 +8,9 @@ edition = "2018"
 cfg-if = "1.0.0"
 
 [features]
+default = ["board-rpi1", "aarch32"]
 board-rpi1 = []
-arch-arm = []
+aarch32 = []
 
 [profile.dev]
 panic = "abort"

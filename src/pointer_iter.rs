@@ -19,9 +19,6 @@ impl<T> Iterator for PointerIter<T> {
 
 impl<T> PointerIter<T> {
     pub fn new(start: *mut T, end: *mut T) -> Self {
-        Self {
-            end,
-            ptr: start,
-        }
+        Self { end, ptr: start }
     }
 }

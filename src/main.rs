@@ -2,11 +2,12 @@
 #![no_std]
 #![no_main]
 
-use crate::board_support::io::uart_console::UartConsole;
-use core::intrinsics::{abort};
+use core::intrinsics::abort;
 use core::panic::PanicInfo;
-use crate::common::mem::clear_region;
+
+use crate::board_support::io::uart_console::UartConsole;
 use crate::board_support::mem::bss_section;
+use crate::common::mem::clear_region;
 
 mod arch;
 mod board_support;
