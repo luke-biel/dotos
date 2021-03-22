@@ -5,7 +5,8 @@ authors = ["Łukasz Biel <lukasz.p.biel@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-cfg-if = "1.0.0"
+cfg-if   = "1.0.0"
+register = "1.0.2"
 
 [features]
 default = ["board-rpi1", "aarch32"]

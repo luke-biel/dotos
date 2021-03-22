@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use core::cell::UnsafeCell;
+use register::{register_structs, register_bitfields, mmio::*};
 
 use crate::arch::IntPtr;
 use crate::pointer_iter::PointerIter;
@@ -10,33 +11,84 @@ extern "Rust" {
     static __bss_end: UnsafeCell<IntPtr>;
 }
 
-const MMIO_BASE: u32 = 0x20000000;
-const GPIO_BASE: u32 = MMIO_BASE + 0x200000;
+/// GPIO registers
+///
+/// Spec https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2835/BCM2835-ARM-Peripherals.pdf
+register_bitfields! {
+    u32,
+
+    /// GPIO Pull-up/down Register
+    pub GPPUP [
+        /// Controls the actuation of the internal pull-up/down control line to ALL the GPIO pins.
+        PUD OFFSET(0) NUMBITS(2) [
+            Off = 0b00,
+            PullDown = 0b01,
+            PullUp = 0b10
+        ]
+    ],
+
+    /// GPIO Pull-up/down Clock Register 0
+    pub GPPUDCLK0 [
+        /// Pin 14
+        PUDCLK14 OFFSET(14) NUMBITS(1) [
+            NoEffect = 0,
+            AssertClock = 1
+        ],
+
+        /// Pin 15
+        PUDCLK15 OFFSET(15) NUMBITS(1) [
+            NoEffect = 0,
+            AssertClock = 1
+        ]
+    ]
+}
+
+register_structs! {
+    GPIORegisterBlock {
+        (0x0000_0000 => _gpio_base), // RPI1 = 0x2020_0000
+        (0x0000_0094 => gppup: ReadWrite<u32, GPPUP::Register>),
+        (0x0000_0098 => gppudclk0: ReadWrite<u32, GPPUDCLK0::Register>),
+        (0x0000_00A2 => @END),
+    }
+}
+
+pub struct GPIO {
+    registers: GPIORegisterBlock,
+}
+
+impl GPIO {
+    pub fn new() -> Self {
+
+    }
+}
+
+pub const MMIO_BASE: u32 = 0x2000_0000;
+pub const GPIO_BASE: u32 = MMIO_BASE + 0x20_0000;
 pub const GPPUD: u32 = GPIO_BASE + 0x94;
 pub const GPPUDCLK0: u32 = GPIO_BASE + 0x98;
-const UART0_BASE: u32 = GPIO_BASE + 0x1000;
+pub const UART0_BASE: u32 = GPIO_BASE + 0x1000;
 pub const UART0_DR: u32 = UART0_BASE + 0x00;
-const UART0_RSRECR: u32 = UART0_BASE + 0x04;
+pub const UART0_RSRECR: u32 = UART0_BASE + 0x04;
 pub const UART0_FR: u32 = UART0_BASE + 0x18;
-const UART0_ILPR: u32 = UART0_BASE + 0x20;
+pub const UART0_ILPR: u32 = UART0_BASE + 0x20;
 pub const UART0_IBRD: u32 = UART0_BASE + 0x24;
 pub const UART0_FBRD: u32 = UART0_BASE + 0x28;
 pub const UART0_LCRH: u32 = UART0_BASE + 0x2C;
 pub const UART0_CR: u32 = UART0_BASE + 0x30;
-const UART0_IFLS: u32 = UART0_BASE + 0x34;
+pub const UART0_IFLS: u32 = UART0_BASE + 0x34;
 pub const UART0_IMSC: u32 = UART0_BASE + 0x38;
-const UART0_RIS: u32 = UART0_BASE + 0x3C;
-const UART0_MIS: u32 = UART0_BASE + 0x40;
+pub const UART0_RIS: u32 = UART0_BASE + 0x3C;
+pub const UART0_MIS: u32 = UART0_BASE + 0x40;
 pub const UART0_ICR: u32 = UART0_BASE + 0x44;
-const UART0_DMACR: u32 = UART0_BASE + 0x48;
-const UART0_ITCR: u32 = UART0_BASE + 0x80;
-const UART0_ITIP: u32 = UART0_BASE + 0x84;
-const UART0_ITOP: u32 = UART0_BASE + 0x88;
-const UART0_TDR: u32 = UART0_BASE + 0x8C;
-const MBOX_BASE: u32 = MMIO_BASE + 0xB880;
-const MBOX_READ: u32 = MBOX_BASE + 0x00;
-const MBOX_STATUS: u32 = MBOX_BASE + 0x18;
-const MBOX_WRITE: u32 = MBOX_BASE + 0x20;
+pub const UART0_DMACR: u32 = UART0_BASE + 0x48;
+pub const UART0_ITCR: u32 = UART0_BASE + 0x80;
+pub const UART0_ITIP: u32 = UART0_BASE + 0x84;
+pub const UART0_ITOP: u32 = UART0_BASE + 0x88;
+pub const UART0_TDR: u32 = UART0_BASE + 0x8C;
+pub const MBOX_BASE: u32 = MMIO_BASE + 0xB880;
+pub const MBOX_READ: u32 = MBOX_BASE + 0x00;
+pub const MBOX_STATUS: u32 = MBOX_BASE + 0x18;
+pub const MBOX_WRITE: u32 = MBOX_BASE + 0x20;
 
 pub fn bss_section() -> PointerIter<IntPtr> {
     unsafe { PointerIter::new(__bss_start.get(), __bss_end.get()) }
