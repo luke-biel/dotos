@@ -31,7 +31,7 @@ _start:
 pub unsafe extern "C" fn kernel_main() -> ! {
     clear_region(bss_section());
     UartConsole::init();
-    println!("Hello, baby");
+    println!("Hello, {}", "baby");
 
     loop {}
 }
