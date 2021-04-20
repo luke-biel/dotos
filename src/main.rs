@@ -5,12 +5,12 @@
 use core::intrinsics::abort;
 use core::panic::PanicInfo;
 
-use crate::board_support::io::uart_console::UartConsole;
-use crate::board_support::mem::bss_section;
+use crate::bsp::io::uart_console::UartConsole;
+use crate::bsp::mem::bss_section;
 use crate::common::mem::clear_region;
 
 mod arch;
-mod board_support;
+mod bsp;
 mod common;
 mod pointer_iter;
 
@@ -31,7 +31,7 @@ _start:
 pub unsafe extern "C" fn kernel_main() -> ! {
     clear_region(bss_section());
     UartConsole::init();
-    println!("Hello, {}", "baby");
+    println!("Hello, {}", 12);
 
     loop {}
 }

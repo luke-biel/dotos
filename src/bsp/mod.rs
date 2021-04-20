@@ -1,3 +1,5 @@
+pub mod device_driver;
+
 use cfg_if::cfg_if;
 
 cfg_if! {

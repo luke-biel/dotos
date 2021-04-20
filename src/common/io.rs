@@ -3,7 +3,7 @@ use core::fmt;
 
 cfg_if! {
     if #[cfg(feature = "board-rpi1")] {
-        use crate::board_support::io::uart_console::UartConsole as Console;
+        use crate::bsp::io::uart_console::UartConsole as Console;
     }
 }
 

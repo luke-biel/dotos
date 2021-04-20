@@ -1,12 +1,13 @@
 use core::fmt;
 
 use crate::arch::cpu;
-use crate::board_support::rpi::io::{mmio_read, mmio_write};
-use crate::board_support::rpi::mem::{
+use crate::bsp::device_driver::bcm::bcm2xxx_gpio::{GPIORegisterBlock, GPPUP};
+use crate::bsp::device_driver::bcm::bcm2xxx_pl011_uart::UARTRegisterBlock;
+use crate::bsp::rpi::io::{mmio_read, mmio_write};
+use crate::bsp::rpi::mem::{
     GPPUDCLK0, UART0_CR, UART0_DR, UART0_FBRD, UART0_FR, UART0_IBRD, UART0_ICR, UART0_IMSC,
     UART0_LCRH,
 };
-use crate::board_support::rpi::mem::{GPIORegisterBlock, GPPUP};
 
 pub struct UartConsole;
 
@@ -23,11 +24,13 @@ impl fmt::Write for UartConsole {
 
 impl UartConsole {
     pub fn init() {
-        let rb = 0x2020_0000usize as *const GPIORegisterBlock;
+        let gpio_rb = 0x2020_0000usize as *const GPIORegisterBlock;
+        let uart_rb = 0x2020_1000usize as *const UARTRegisterBlock;
 
-        mmio_write(UART0_CR, 0x00000000);
+        unsafe { (*uart_rb).cr.set(0) };
+        // mmio_write(UART0_CR, 0x00000000);
 
-        unsafe { (*rb).gppup.write(GPPUP::PUD::Off) };
+        unsafe { (*gpio_rb).gppup.write(GPPUP::PUD::Off) };
         // mmio_write(GPPUD, 0x00000000);
         cpu::sleep(150);
 
