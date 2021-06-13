@@ -7,6 +7,8 @@ edition = "2018"
 [dependencies]
 cfg-if   = "1.0.0"
 register = "1.0.2"
+spin     = "0.9.0"
+tock-registers = { git = "https://github.com/luke-biel/tock" }
 
 [features]
 default = ["board-rpi1", "aarch32"]
@@ -18,3 +20,6 @@ panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[patch.crates-io]
+tock-registers = { git = "https://github.com/luke-biel/tock" }

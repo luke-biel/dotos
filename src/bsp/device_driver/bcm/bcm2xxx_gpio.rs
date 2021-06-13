@@ -2,6 +2,7 @@ use crate::arch::cpu;
 use crate::bsp::device_driver::WrappedPointer;
 use cfg_if::cfg_if;
 use register::{mmio::*, register_bitfields, register_structs};
+use tock_registers::registers::Writeable;
 
 register_bitfields! {
     u32,
@@ -151,11 +152,15 @@ register_structs! {
     }
 }
 
-pub struct GPIO {
+struct GPIOInner {
     block: WrappedPointer<GPIORegisterBlock>,
 }
 
-impl GPIO {
+pub struct GPIO {
+    inner: spin::Mutex<GPIOInner>,
+}
+
+impl GPIOInner {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
             block: WrappedPointer::new(mmio_start_addr),
@@ -173,7 +178,6 @@ impl GPIO {
                 cpu::sleep(150);
                 self.block.gppup.write(GPPUP::PUD::Off);
                 self.block.gppudclk0.set(0);
-
             } else if #[cfg(feature = "board-rpi3")] {
                 // bcm2837 impl
                     unimplemented!()
@@ -191,5 +195,13 @@ impl GPIO {
             .write(GPFSEL1::FSEL15::AltFunc0 + GPFSEL1::FSEL14::AltFunc0);
 
         self.disable_pud();
+    }
+}
+
+impl GPIO {
+    pub const unsafe fn new(mmio_start_addr: usize) -> Self {
+        Self {
+            inner: spin::Mutex::new(GPIOInner::new(mmio_start_addr)),
+        }
     }
 }

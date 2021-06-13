@@ -8,6 +8,7 @@ use crate::bsp::rpi::mem::{
     GPPUDCLK0, UART0_CR, UART0_DR, UART0_FBRD, UART0_FR, UART0_IBRD, UART0_ICR, UART0_IMSC,
     UART0_LCRH,
 };
+use tock_registers::registers::Writeable;
 
 pub struct UartConsole;
 
