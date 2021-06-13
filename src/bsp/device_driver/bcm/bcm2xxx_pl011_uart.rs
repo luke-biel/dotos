@@ -1,4 +1,6 @@
 use register::{mmio::*, register_bitfields, register_structs};
+use crate::bsp::device_driver::WrappedPointer;
+use tock_registers::registers::{Writeable, Readable};
 
 register_bitfields! {
     u32,
@@ -24,7 +26,10 @@ register_bitfields! {
         ///
         /// - If the FIFO is disabled, this bit is set when the transmit holding register is full.
         /// - If the FIFO is enabled, the TXFF bit is set when the transmit FIFO is full.
-        TXFF OFFSET(5) NUMBITS(1) [],
+        TXFF OFFSET(5) NUMBITS(1) [
+            Full = 1,
+            Empty = 0
+        ],
 
         /// Receive FIFO empty. The meaning of this bit depends on the state of the FEN bit in the UARTLCR_H Register.
         ///
@@ -108,7 +113,7 @@ register_bitfields! {
     ],
 
     /// Control registrer
-    CR [
+    pub CR [
         /// CTS hardware flow control enable.
         CTSEN OFFSET(15) NUMBITS(1) [
             Disabled = 0,
@@ -152,8 +157,27 @@ register_bitfields! {
         ]
     ],
 
+    /// Interrupt Mask Set Clear Register
+    pub IMSC [
+        OEIM OFFSET(10) NUMBITS(1) [],
+
+        BEIM OFFSET(9) NUMBITS(1) [],
+
+        PEIM OFFSET(8) NUMBITS(1) [],
+
+        FEIM OFFSET(7) NUMBITS(1) [],
+
+        RTIM OFFSET(6) NUMBITS(1) [],
+
+        TXIM OFFSET(5) NUMBITS(1) [],
+
+        RXIM OFFSET(4) NUMBITS(1) [],
+
+        CTSMIM OFFSET(1) NUMBITS(1) []
+    ],
+
     /// Interrupt clear register
-    ICR [
+    pub ICR [
         ALL OFFSET(0) NUMBITS(11) []
     ]
 }
@@ -168,7 +192,69 @@ register_structs! {
         (0x0000_002c => pub lcrh: WriteOnly<u32, LCRH::Register>),
         (0x0000_0030 => pub cr: WriteOnly<u32, CR::Register>),
         (0x0000_0034 => _reserved2),
+        (0x0000_0038 => pub imsc: ReadWrite<u32, IMSC::Register>),
+        (0x0000_003c => _reserved3),
         (0x0000_0044 => pub icr: ReadWrite<u32, ICR::Register>),
         (0x0000_0048 => @END),
+    }
+}
+
+struct UARTInner {
+    block: WrappedPointer<UARTRegisterBlock>,
+}
+
+pub struct UART {
+    inner: UARTInner,
+}
+
+impl UARTInner {
+    const unsafe fn new(mmio_start_addr: usize) -> Self {
+        Self {
+            block: WrappedPointer::new(mmio_start_addr),
+        }
+    }
+
+    fn init_pl011_uart(&self) {
+        self.block.icr.set(0x7FF);
+
+        self.block.ibrd.set(1);
+        self.block.fbrd.set(0x28);
+
+        self.block.lcrh.write(LCRH::FEN::Enabled + LCRH::WLEN::Len8);
+
+        self.block.imsc.set(0x7f1);
+
+        self.block.cr.write(CR::UARTEN::Enabled + CR::TXE::Enabled + CR::RXE::Enabled);
+    }
+
+    fn clear_cr(&self) {
+        self.block.cr.set(0)
+    }
+
+    fn write_blocking(&self, s: &str) {
+        for c in s.chars() {
+            while self.block.fr.matches_all(FR::TXFF::Full) {}
+            self.block.dr.set(c as u32);
+        }
+    }
+}
+
+impl UART {
+    pub const unsafe fn new(mmio_start_addr: usize) -> Self {
+        Self {
+            inner: UARTInner::new(mmio_start_addr),
+        }
+    }
+
+    pub fn init_pl011_uart(&self) {
+        self.inner.init_pl011_uart()
+    }
+
+    pub fn clear_cr(&self) {
+        self.inner.clear_cr()
+    }
+
+    pub fn write_blocking(&self, s: &str) {
+        self.inner.write_blocking(s)
     }
 }

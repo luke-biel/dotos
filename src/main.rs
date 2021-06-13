@@ -1,3 +1,4 @@
+#![allow(clippy::upper_case_acronyms)]
 #![feature(core_intrinsics, global_asm, asm)]
 #![no_std]
 #![no_main]
@@ -28,7 +29,7 @@ _start:
 );
 
 #[no_mangle]
-pub unsafe extern "C" fn kernel_main() -> ! {
+unsafe extern "C" fn kernel_main() -> ! {
     clear_region(bss_section());
     UartConsole::init();
     println!("Hello, {}", 12);

@@ -157,7 +157,7 @@ struct GPIOInner {
 }
 
 pub struct GPIO {
-    inner: spin::Mutex<GPIOInner>,
+    inner: GPIOInner,
 }
 
 impl GPIOInner {
@@ -180,10 +180,10 @@ impl GPIOInner {
                 self.block.gppudclk0.set(0);
             } else if #[cfg(feature = "board-rpi3")] {
                 // bcm2837 impl
-                    unimplemented!()
+                unimplemented!()
             } else if #[cfg(feature = "board-rpi4")] {
                 // bcm2711 impl
-                    unimplemented!()
+                unimplemented!()
             }
 
         }
@@ -201,7 +201,11 @@ impl GPIOInner {
 impl GPIO {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: spin::Mutex::new(GPIOInner::new(mmio_start_addr)),
+            inner: GPIOInner::new(mmio_start_addr),
         }
+    }
+
+    pub fn init_pl011_uart(&self) {
+        self.inner.init_pl011_uart()
     }
 }
