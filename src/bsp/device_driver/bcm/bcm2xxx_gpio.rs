@@ -189,7 +189,7 @@ impl GPIOInner {
         }
     }
 
-    pub fn init_pl011_uart(&self) {
+    pub fn map_pl011_uart(&self) {
         self.block
             .gpfsel1
             .write(GPFSEL1::FSEL15::AltFunc0 + GPFSEL1::FSEL14::AltFunc0);
@@ -205,7 +205,7 @@ impl GPIO {
         }
     }
 
-    pub fn init_pl011_uart(&self) {
-        self.inner.init_pl011_uart()
+    pub fn map_pl011_uart(&self) {
+        self.inner.map_pl011_uart()
     }
 }

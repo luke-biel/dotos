@@ -1,6 +1,6 @@
 use register::{mmio::*, register_bitfields, register_structs};
-use crate::bsp::device_driver::WrappedPointer;
-use tock_registers::registers::{Writeable, Readable};
+
+pub mod uart;
 
 register_bitfields! {
     u32,
@@ -35,7 +35,10 @@ register_bitfields! {
         ///
         /// - If the FIFO is disabled, this bit is set when the receive holding register is empty.
         /// - If the FIFO is enabled, the RXFE bit is set when the receive FIFO is empty.
-        RXFE OFFSET(4) NUMBITS(1) [],
+        RXFE OFFSET(4) NUMBITS(1) [
+            Empty = 1,
+            Full = 0
+        ],
 
         /// UART busy.
         /// - If this bit is set to 1, the UART is busy transmitting data.
@@ -196,65 +199,5 @@ register_structs! {
         (0x0000_003c => _reserved3),
         (0x0000_0044 => pub icr: ReadWrite<u32, ICR::Register>),
         (0x0000_0048 => @END),
-    }
-}
-
-struct UARTInner {
-    block: WrappedPointer<UARTRegisterBlock>,
-}
-
-pub struct UART {
-    inner: UARTInner,
-}
-
-impl UARTInner {
-    const unsafe fn new(mmio_start_addr: usize) -> Self {
-        Self {
-            block: WrappedPointer::new(mmio_start_addr),
-        }
-    }
-
-    fn init_pl011_uart(&self) {
-        self.block.icr.set(0x7FF);
-
-        self.block.ibrd.set(1);
-        self.block.fbrd.set(0x28);
-
-        self.block.lcrh.write(LCRH::FEN::Enabled + LCRH::WLEN::Len8);
-
-        self.block.imsc.set(0x7f1);
-
-        self.block.cr.write(CR::UARTEN::Enabled + CR::TXE::Enabled + CR::RXE::Enabled);
-    }
-
-    fn clear_cr(&self) {
-        self.block.cr.set(0)
-    }
-
-    fn write_blocking(&self, s: &str) {
-        for c in s.chars() {
-            while self.block.fr.matches_all(FR::TXFF::Full) {}
-            self.block.dr.set(c as u32);
-        }
-    }
-}
-
-impl UART {
-    pub const unsafe fn new(mmio_start_addr: usize) -> Self {
-        Self {
-            inner: UARTInner::new(mmio_start_addr),
-        }
-    }
-
-    pub fn init_pl011_uart(&self) {
-        self.inner.init_pl011_uart()
-    }
-
-    pub fn clear_cr(&self) {
-        self.inner.clear_cr()
-    }
-
-    pub fn write_blocking(&self, s: &str) {
-        self.inner.write_blocking(s)
     }
 }
