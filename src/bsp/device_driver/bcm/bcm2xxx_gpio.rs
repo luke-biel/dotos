@@ -3,6 +3,8 @@ use crate::bsp::device_driver::WrappedPointer;
 use cfg_if::cfg_if;
 use register::{mmio::*, register_bitfields, register_structs};
 use tock_registers::registers::Writeable;
+use crate::common::driver::DeviceDriver;
+use spin::mutex::spin::SpinMutex;
 
 register_bitfields! {
     u32,
@@ -157,7 +159,7 @@ struct GPIOInner {
 }
 
 pub struct GPIO {
-    inner: GPIOInner,
+    inner: SpinMutex<GPIOInner>,
 }
 
 impl GPIOInner {
@@ -201,11 +203,21 @@ impl GPIOInner {
 impl GPIO {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: GPIOInner::new(mmio_start_addr),
+            inner: SpinMutex::new(GPIOInner::new(mmio_start_addr)),
         }
     }
 
     pub fn map_pl011_uart(&self) {
-        self.inner.map_pl011_uart()
+        self.inner.lock().map_pl011_uart()
+    }
+}
+
+impl DeviceDriver for GPIO {
+    fn compat() -> &'static str {
+        "BCM2xxx GPIO"
+    }
+
+    unsafe fn init(&self) -> Result<(), &'static str> {
+        Ok(())
     }
 }
