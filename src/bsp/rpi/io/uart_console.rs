@@ -2,12 +2,13 @@ use core::fmt;
 
 use crate::bsp::device_driver::bcm::bcm2xxx_gpio::GPIO;
 use crate::bsp::device_driver::bcm::bcm2xxx_pl011_uart::uart::UART;
+use crate::bsp::rpi::mem::{UART_START, GPIO_START};
 
 pub struct UartConsole;
 
 impl fmt::Write for UartConsole {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        let uart = unsafe { UART::new(0x2020_1000usize) };
+        let uart = unsafe { UART::new(UART_START) };
 
         uart.write_blocking(s);
 
@@ -17,8 +18,8 @@ impl fmt::Write for UartConsole {
 
 impl UartConsole {
     pub fn init() {
-        let gpio = unsafe { GPIO::new(0x2020_0000usize) };
-        let uart = unsafe { UART::new(0x2020_1000usize) };
+        let gpio = unsafe { GPIO::new(GPIO_START) };
+        let uart = unsafe { UART::new(UART_START) };
 
         gpio.map_pl011_uart();
 

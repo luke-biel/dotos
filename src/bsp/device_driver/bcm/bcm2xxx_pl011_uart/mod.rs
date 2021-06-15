@@ -187,7 +187,7 @@ register_bitfields! {
 
 register_structs! {
     pub UARTRegisterBlock {
-        (0x0000_0000 => pub dr: ReadWrite<u32>), // RPI1 = 0x2020_1000
+        (0x0000_0000 => pub dr: ReadWrite<u32>),
         (0x0000_0004 => _reserved1),
         (0x0000_0018 => pub fr: ReadOnly<u32, FR::Register>),
         (0x0000_0024 => pub ibrd: WriteOnly<u32, IBRD::Register>),
