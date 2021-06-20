@@ -3,16 +3,15 @@
 #![no_std]
 #![no_main]
 
+use core::intrinsics::abort;
+use core::panic::PanicInfo;
+use bsp::device_driver::bcm::bcm2xxx_pl011_uart::uart::UART;
 use crate::bsp::io::uart_console::UartConsole;
 use crate::bsp::mem::bss_section;
 use crate::common::mem::zero_region_volatile;
-use bsp::device_driver::bcm::bcm2xxx_pl011_uart::uart::UART;
-use core::intrinsics::abort;
-use core::panic::PanicInfo;
 
 mod arch;
 mod bsp;
-mod c;
 mod common;
 mod pointer_iter;
 mod runtime;
