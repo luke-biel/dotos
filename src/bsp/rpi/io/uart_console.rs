@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::bsp::device_driver::bcm::bcm2xxx_gpio::GPIO;
 use crate::bsp::device_driver::bcm::bcm2xxx_pl011_uart::uart::UART;
-use crate::bsp::rpi::mem::{UART_START, GPIO_START};
+use crate::bsp::rpi::mem::{GPIO_START, UART_START};
 
 pub struct UartConsole;
 

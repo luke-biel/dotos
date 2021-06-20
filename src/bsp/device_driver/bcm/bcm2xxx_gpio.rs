@@ -1,10 +1,10 @@
 use crate::arch::cpu;
 use crate::bsp::device_driver::WrappedPointer;
+use crate::common::driver::DeviceDriver;
 use cfg_if::cfg_if;
 use register::{mmio::*, register_bitfields, register_structs};
-use tock_registers::registers::Writeable;
-use crate::common::driver::DeviceDriver;
 use spin::mutex::spin::SpinMutex;
+use tock_registers::registers::Writeable;
 
 register_bitfields! {
     u32,

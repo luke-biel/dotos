@@ -1,5 +1,5 @@
 [package]
-name = "dotos-arm"
+name = "dotos"
 version = "0.1.0"
 authors = ["Łukasz Biel <lukasz.p.biel@gmail.com>"]
 edition = "2018"

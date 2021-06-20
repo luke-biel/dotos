@@ -24,7 +24,7 @@ unsafe fn memcmp(ptr1: IntPtr, ptr2: IntPtr, num: UInt) -> Int {
 unsafe fn __sync_val_compare_and_swap_1(ptr: *mut u8, old_val: u8, new_val: u8) -> u8 {
     if *ptr == old_val {
         ptr.write(new_val);
-        return old_val
+        return old_val;
     }
     *ptr
 }

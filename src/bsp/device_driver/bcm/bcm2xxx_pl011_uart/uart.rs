@@ -1,6 +1,6 @@
 use tock_registers::registers::{Readable, Writeable};
 
-use crate::bsp::device_driver::bcm::bcm2xxx_pl011_uart::{CR, FR, LCRH, UARTRegisterBlock};
+use crate::bsp::device_driver::bcm::bcm2xxx_pl011_uart::{UARTRegisterBlock, CR, FR, LCRH};
 use crate::bsp::device_driver::WrappedPointer;
 
 struct UARTInner {
@@ -52,7 +52,7 @@ impl UARTInner {
 
     fn read_char(&self) -> Option<u8> {
         if self.block.fr.matches_all(FR::RXFE::Empty) {
-            return None
+            return None;
         }
 
         Some(self.block.dr.get() as u8)
