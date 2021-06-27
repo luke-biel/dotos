@@ -37,6 +37,7 @@ unsafe fn kernel_main() -> ! {
 
 #[panic_handler]
 unsafe fn panic(_info: &PanicInfo) -> ! {
+    // TODO: Reinit UART, print what happened
     abort()
 }
 

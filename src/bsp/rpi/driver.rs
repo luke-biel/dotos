@@ -21,8 +21,4 @@ impl DriverManager for BspDriverManager {
     fn post_device_driver_init(&self) {
         GPIO.map_pl011_uart()
     }
-
-    fn get(&self, idx: usize) -> Option<&'static (dyn DeviceDriver + Sync)> {
-        self.drivers.get(idx).copied()
-    }
 }
