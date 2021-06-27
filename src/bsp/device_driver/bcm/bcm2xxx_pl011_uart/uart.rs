@@ -2,13 +2,15 @@ use tock_registers::registers::{Readable, Writeable};
 
 use crate::bsp::device_driver::bcm::bcm2xxx_pl011_uart::{UARTRegisterBlock, CR, FR, LCRH};
 use crate::bsp::device_driver::WrappedPointer;
+use crate::common::driver::DeviceDriver;
+use spin::Mutex;
 
 struct UARTInner {
     block: WrappedPointer<UARTRegisterBlock>,
 }
 
 pub struct UART {
-    inner: UARTInner,
+    inner: Mutex<UARTInner>,
 }
 
 impl UARTInner {
@@ -62,19 +64,31 @@ impl UARTInner {
 impl UART {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: UARTInner::new(mmio_start_addr),
+            inner: spin::Mutex::new(UARTInner::new(mmio_start_addr)),
         }
     }
 
     pub fn map_pl011_uart(&self) {
-        self.inner.map_pl011_uart()
+        self.inner.lock().map_pl011_uart()
     }
 
     pub fn write_blocking(&self, s: &str) {
-        self.inner.write_blocking(s)
+        self.inner.lock().write_blocking(s)
     }
 
     pub fn read_char(&self) -> Option<u8> {
-        self.inner.read_char()
+        self.inner.lock().read_char()
+    }
+}
+
+impl DeviceDriver for UART {
+    fn compat(&self) -> &'static str {
+        "BCM PL011 UART"
+    }
+
+    unsafe fn init(&self) -> Result<(), &'static str> {
+        self.map_pl011_uart();
+
+        Ok(())
     }
 }

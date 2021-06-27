@@ -213,11 +213,7 @@ impl GPIO {
 }
 
 impl DeviceDriver for GPIO {
-    fn compat() -> &'static str {
-        "BCM2xxx GPIO"
-    }
-
-    unsafe fn init(&self) -> Result<(), &'static str> {
-        Ok(())
+    fn compat(&self) -> &'static str {
+        "BCM GPIO"
     }
 }

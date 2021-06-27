@@ -6,9 +6,8 @@
 use core::intrinsics::abort;
 use core::panic::PanicInfo;
 use bsp::device_driver::bcm::bcm2xxx_pl011_uart::uart::UART;
-use crate::bsp::io::uart_console::UartConsole;
-use crate::bsp::mem::bss_section;
-use crate::common::mem::zero_region_volatile;
+use crate::bsp::driver::driver_manager;
+use crate::common::driver::DriverManager;
 
 mod arch;
 mod bsp;
@@ -21,6 +20,11 @@ unsafe fn kernel_main() -> ! {
     println!("> {} - v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
     println!("> build time: {}", env!("BUILD_DATE"));
     println!("> git head: {}", env!("GIT_HASH"));
+
+    println!("> drivers loaded:");
+    for (i, driver) in driver_manager().all().iter().enumerate() {
+        println!("> {}: {}", i, driver.compat())
+    }
 
     let uart = UART::new(0x2020_1000usize);
 
@@ -37,7 +41,14 @@ unsafe fn panic(_info: &PanicInfo) -> ! {
 }
 
 pub(crate) unsafe fn kernel_init() -> ! {
-    UartConsole::init();
+    let manager = driver_manager();
+    for driver in manager.all().iter() {
+        if let Err(err) = driver.init() {
+            panic!("Error initializing driver {}: {}", driver.compat(), err);
+        }
+    }
+
+    manager.post_device_driver_init();
 
     kernel_main()
 }

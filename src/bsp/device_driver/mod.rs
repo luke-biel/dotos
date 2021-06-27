@@ -3,6 +3,9 @@ use core::ops::Deref;
 
 pub mod bcm;
 
+pub use bcm::bcm2xxx_gpio::GPIO;
+pub use bcm::bcm2xxx_pl011_uart::uart::UART;
+
 pub struct WrappedPointer<T> {
     pointer: usize,
     _phantom: PhantomData<T>,
