@@ -3,11 +3,11 @@
 #![no_std]
 #![no_main]
 
-use core::intrinsics::abort;
-use core::panic::PanicInfo;
-use bsp::device_driver::bcm::bcm2xxx_pl011_uart::uart::UART;
 use crate::bsp::driver::driver_manager;
 use crate::common::driver::DriverManager;
+use bsp::device_driver::bcm::bcm2xxx_pl011_uart::uart::UART;
+use core::intrinsics::abort;
+use core::panic::PanicInfo;
 
 mod arch;
 mod bsp;
@@ -17,7 +17,11 @@ mod runtime;
 
 #[allow(clippy::empty_loop)]
 unsafe fn kernel_main() -> ! {
-    println!("> {} - v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    println!(
+        "> {} - v{}",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION")
+    );
     println!("> build time: {}", env!("BUILD_DATE"));
     println!("> git head: {}", env!("GIT_HASH"));
 

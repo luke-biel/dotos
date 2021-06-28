@@ -1,5 +1,5 @@
-use core::fmt;
 use crate::bsp::rpi::PL011_UART;
+use core::fmt;
 
 pub struct UartConsole;
 

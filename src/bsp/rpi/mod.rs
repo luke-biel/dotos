@@ -1,6 +1,6 @@
+pub mod driver;
 pub mod io;
 pub mod mem;
-pub mod driver;
 
 use super::device_driver;
 use crate::bsp::rpi::mem::{GPIO_START, UART_START};

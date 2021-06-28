@@ -1,5 +1,5 @@
-use crate::common::mem::zero_region_volatile;
 use crate::bsp::mem::bss_section;
+use crate::common::mem::zero_region_volatile;
 use crate::kernel_init;
 
 unsafe fn clear_bss() {

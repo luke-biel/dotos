@@ -1,10 +1,10 @@
 use tock_registers::registers::{Readable, Writeable};
 
+use crate::arch::cpu::nop;
 use crate::bsp::device_driver::bcm::bcm2xxx_pl011_uart::{UARTRegisterBlock, CR, FR, LCRH};
 use crate::bsp::device_driver::WrappedPointer;
 use crate::common::driver::DeviceDriver;
 use spin::Mutex;
-use crate::arch::cpu::nop;
 
 struct UARTInner {
     block: WrappedPointer<UARTRegisterBlock>,
@@ -30,7 +30,7 @@ impl UARTInner {
 
     fn flush(&self) {
         while self.block.fr.matches_all(FR::BUSY::SET) {
-           nop();
+            nop();
         }
     }
 

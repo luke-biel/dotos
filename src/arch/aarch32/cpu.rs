@@ -11,7 +11,5 @@ pub fn sleep(count: u32) {
 }
 
 pub fn nop() {
-    unsafe {
-        __nop()
-    }
+    unsafe { __nop() }
 }

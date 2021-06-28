@@ -1,8 +1,8 @@
-use crate::common::driver::{DeviceDriver, DriverManager};
 use crate::bsp::rpi::{GPIO, PL011_UART};
+use crate::common::driver::{DeviceDriver, DriverManager};
 
 static BSP_DRIVER_MANAGER: BspDriverManager = BspDriverManager {
-    drivers: [&GPIO, &PL011_UART]
+    drivers: [&GPIO, &PL011_UART],
 };
 
 pub struct BspDriverManager {
