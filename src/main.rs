@@ -33,9 +33,8 @@ unsafe fn kernel_main() -> ! {
     let uart = UART::new(0x2020_1000usize);
 
     loop {
-        if let Some(printme) = uart.read_char() {
-            println!("Hello, {}", printme as char);
-        }
+        let printme = uart.read_char_blocking();
+        println!("Hello, {}", printme as char);
     }
 }
 

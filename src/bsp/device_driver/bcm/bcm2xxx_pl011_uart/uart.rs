@@ -26,6 +26,24 @@ impl UARTInner {
             while self.block.fr.matches_all(FR::TXFF::Full) {}
             self.block.dr.set(c as u32);
         }
+
+        self.flush()
+    }
+
+    fn read_char(&self) -> Option<u8> {
+        if self.block.fr.matches_all(FR::RXFE::Empty) {
+            return None;
+        }
+
+        Some(self.block.dr.get() as u8)
+    }
+
+    fn read_char_blocking(&self) -> u8 {
+        while self.block.fr.matches_all(FR::RXFE::Empty) {
+            nop()
+        }
+
+        self.block.dr.get() as u8
     }
 
     fn flush(&self) {
@@ -52,14 +70,6 @@ impl UARTInner {
             .cr
             .write(CR::UARTEN::Enabled + CR::TXE::Enabled + CR::RXE::Enabled);
     }
-
-    fn read_char(&self) -> Option<u8> {
-        if self.block.fr.matches_all(FR::RXFE::Empty) {
-            return None;
-        }
-
-        Some(self.block.dr.get() as u8)
-    }
 }
 
 impl UART {
@@ -79,6 +89,10 @@ impl UART {
 
     pub fn read_char(&self) -> Option<u8> {
         self.inner.lock().read_char()
+    }
+
+    pub fn read_char_blocking(&self) -> u8 {
+        self.inner.lock().read_char_blocking()
     }
 }
 
