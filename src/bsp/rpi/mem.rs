@@ -14,7 +14,7 @@ pub const GPIO_OFFSET: usize = 0x20_0000;
 pub const UART_OFFSET: usize = 0x20_1000;
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "board-rpi1")] {
+    if #[cfg(feature = "rpi1")] {
         const MMIO_BASE: usize = 0x2000_0000;
     }
 }

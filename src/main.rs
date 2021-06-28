@@ -1,5 +1,5 @@
 #![allow(clippy::upper_case_acronyms)]
-#![feature(core_intrinsics, global_asm, asm)]
+#![feature(core_intrinsics, global_asm, asm, stdsimd)]
 #![no_std]
 #![no_main]
 

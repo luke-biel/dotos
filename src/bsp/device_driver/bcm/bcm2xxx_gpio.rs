@@ -171,7 +171,7 @@ impl GPIOInner {
 
     fn disable_pud(&self) {
         cfg_if! {
-            if #[cfg(feature = "board-rpi1")] {
+            if #[cfg(feature = "rpi1")] {
                 // bcm2835 impl
 
                 self.block.gppup.write(GPPUP::PUD::Off);
@@ -180,10 +180,10 @@ impl GPIOInner {
                 cpu::sleep(150);
                 self.block.gppup.write(GPPUP::PUD::Off);
                 self.block.gppudclk0.set(0);
-            } else if #[cfg(feature = "board-rpi3")] {
+            } else if #[cfg(feature = "rpi3")] {
                 // bcm2837 impl
                 unimplemented!()
-            } else if #[cfg(feature = "board-rpi4")] {
+            } else if #[cfg(feature = "rpi4")] {
                 // bcm2711 impl
                 unimplemented!()
             }

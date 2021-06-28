@@ -20,9 +20,9 @@ dependencies = [
 
 [[package]]
 name = "lock_api"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a3c91c24eae6777794bb1997ad98bbb87daf92890acab859f7eaa4320333176"
+checksum = "0382880606dff6d15c9476c416d18690b72742aa7b605bb6dd6ec9030fbf07eb"
 dependencies = [
  "scopeguard",
 ]
@@ -44,9 +44,9 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "spin"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b87bbf98cb81332a56c1ee8929845836f85e8ddd693157c30d76660196014478"
+checksum = "f5fdd7196b4ae35a111c6dc97f9cc152ca3ea8ad744f7cb46a9f27b3ef8f2f54"
 dependencies = [
  "lock_api",
 ]
@@ -54,4 +54,4 @@ dependencies = [
 [[package]]
 name = "tock-registers"
 version = "0.6.0"
-source = "git+https://github.com/luke-biel/tock#8bf3a98a0acd3e3cda7d11d6b15035a764fb1328"
+source = "git+https://github.com/tock/tock#94172ecf293e6df598192111b87db9dbbcaad178"

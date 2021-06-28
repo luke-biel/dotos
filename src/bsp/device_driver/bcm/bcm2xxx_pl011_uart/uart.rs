@@ -4,6 +4,7 @@ use crate::bsp::device_driver::bcm::bcm2xxx_pl011_uart::{UARTRegisterBlock, CR, 
 use crate::bsp::device_driver::WrappedPointer;
 use crate::common::driver::DeviceDriver;
 use spin::Mutex;
+use crate::arch::cpu::nop;
 
 struct UARTInner {
     block: WrappedPointer<UARTRegisterBlock>,
@@ -29,7 +30,7 @@ impl UARTInner {
 
     fn flush(&self) {
         while self.block.fr.matches_all(FR::BUSY::SET) {
-            unsafe { asm!("nop") }; // FIXME: this is cpu arch specific, move it
+           nop();
         }
     }
 

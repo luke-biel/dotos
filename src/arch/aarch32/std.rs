@@ -21,7 +21,7 @@ unsafe fn memcmp(ptr1: IntPtr, ptr2: IntPtr, num: UInt) -> Int {
 #[no_mangle]
 // TODO: Review function, it's not really sync and when I'll switch to multithreading, this may be problematic
 /// Spec: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fsync-Builtins.html
-unsafe fn __sync_val_compare_and_swap_1(ptr: *mut u8, old_val: u8, new_val: u8) -> u8 {
+unsafe fn __sync_val_compare_and_swap_1(ptr: *mut Int, old_val: Int, new_val: Int) -> Int {
     if *ptr == old_val {
         ptr.write(new_val);
         return old_val;
@@ -32,7 +32,7 @@ unsafe fn __sync_val_compare_and_swap_1(ptr: *mut u8, old_val: u8, new_val: u8) 
 #[no_mangle]
 // TODO: Review function, it's not really sync and when I'll switch to multithreading, this may be problematic
 /// Spec: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fsync-Builtins.html
-unsafe fn __sync_lock_test_and_set_1(ptr: *mut u8, new_val: u8) -> u8 {
+unsafe fn __sync_lock_test_and_set_1(ptr: *mut Int, new_val: Int) -> Int {
     let temp = *ptr;
     ptr.write(new_val);
     temp
