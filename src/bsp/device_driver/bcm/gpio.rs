@@ -1,4 +1,4 @@
-use crate::arch::cpu::sleep_for_cycles;
+use crate::arch::cpu::spin_for_cycles;
 use crate::bsp::device_driver::WrappedPointer;
 use crate::common::driver::DeviceDriver;
 use spin::mutex::spin::SpinMutex;
@@ -159,7 +159,7 @@ struct GpioInner {
 }
 
 pub struct Gpio {
-    inner: SpinMutex<GpioInner>,
+    inner: GpioInner,
 }
 
 impl GpioInner {
@@ -171,11 +171,11 @@ impl GpioInner {
 
     fn disable_pud(&self) {
         self.block.gppup.write(GPPUP::PUD::Off);
-        sleep_for_cycles(20_000);
+        spin_for_cycles(20_000);
         self.block
             .gppudclk0
             .write(GPPUDCLK0::PUDCLK14::AssertClock + GPPUDCLK0::PUDCLK15::AssertClock);
-        sleep_for_cycles(20_000);
+        spin_for_cycles(20_000);
         self.block.gppup.write(GPPUP::PUD::Off);
         self.block.gppudclk0.set(0);
     }
@@ -192,12 +192,12 @@ impl GpioInner {
 impl Gpio {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: SpinMutex::new(GpioInner::new(mmio_start_addr)),
+            inner: GpioInner::new(mmio_start_addr),
         }
     }
 
     pub fn map_pl011_uart(&self) {
-        self.inner.lock().map_pl011_uart()
+        self.inner.map_pl011_uart()
     }
 }
 

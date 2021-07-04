@@ -210,7 +210,7 @@ struct UartInner {
 }
 
 pub struct Uart {
-    inner: Mutex<UartInner>,
+    inner: UartInner,
 }
 
 impl UartInner {
@@ -225,8 +225,6 @@ impl UartInner {
             while self.block.fr.matches_all(FR::TXFF::Full) {}
             self.block.dr.set(c as u32);
         }
-
-        self.flush();
     }
 
     // fn read_char(&self) -> Option<u8> {
@@ -238,7 +236,9 @@ impl UartInner {
     // }
 
     fn read_char_blocking(&self) -> u8 {
-        while self.block.fr.matches_all(FR::RXFE::Empty) {}
+        while self.block.fr.matches_all(FR::RXFE::Empty) {
+            unsafe { asm!("nop") }
+        }
 
         let c = self.block.dr.get() as u8;
 
@@ -254,7 +254,9 @@ impl UartInner {
     // }
 
     fn flush(&self) {
-        while self.block.fr.matches_all(FR::BUSY::SET) {}
+        while self.block.fr.matches_all(FR::BUSY::SET) {
+            unsafe { asm!("nop") }
+        }
     }
 
     fn map_pl011_uart(&self) {
@@ -262,14 +264,12 @@ impl UartInner {
 
         self.block.cr.set(0);
 
-        self.block.icr.set(0x7FF);
+        self.block.icr.write(ICR::ALL::CLEAR);
 
-        self.block.ibrd.write(IBRD::BAUD_DIVINT.val(1));
-        self.block.fbrd.write(FBRD::BAUD_DIVFRAC.val(40));
+        self.block.ibrd.write(IBRD::BAUD_DIVINT.val(26));
+        self.block.fbrd.write(FBRD::BAUD_DIVFRAC.val(3));
 
         self.block.lcrh.write(LCRH::FEN::Enabled + LCRH::WLEN::Len8);
-
-        self.block.imsc.set(0x7f1);
 
         self.block
             .cr
@@ -280,28 +280,28 @@ impl UartInner {
 impl Uart {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: spin::Mutex::new(UartInner::new(mmio_start_addr)),
+            inner: UartInner::new(mmio_start_addr),
         }
     }
 
     pub fn map_pl011_uart(&self) {
-        self.inner.lock().map_pl011_uart()
+        self.inner.map_pl011_uart()
     }
 
     pub fn write_blocking(&self, s: &str) {
-        self.inner.lock().write_blocking(s)
+        self.inner.write_blocking(s)
     }
 
     // pub fn read_char(&self) -> Option<u8> {
-    //     self.inner.lock().read_char()
+    //     self.inner.read_char()
     // }
 
     pub fn read_char_blocking(&self) -> u8 {
-        self.inner.lock().read_char_blocking()
+        self.inner.read_char_blocking()
     }
 
     // pub fn clear_rx(&self) {
-    //     self.inner.lock().clear_rx()
+    //     self.inner.clear_rx()
     // }
 }
 

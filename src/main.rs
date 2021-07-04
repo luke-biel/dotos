@@ -12,7 +12,6 @@ mod bsp;
 mod panic_handler;
 mod pointer_iter;
 mod common;
-mod runtime;
 
 unsafe fn kernel_init() -> ! {
     let manager = driver_manager();
