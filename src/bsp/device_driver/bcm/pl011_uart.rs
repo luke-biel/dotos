@@ -205,15 +205,15 @@ register_structs! {
     }
 }
 
-struct UARTInner {
+struct UartInner {
     block: WrappedPointer<UARTRegisterBlock>,
 }
 
-pub struct UART {
-    inner: Mutex<UARTInner>,
+pub struct Uart {
+    inner: Mutex<UartInner>,
 }
 
-impl UARTInner {
+impl UartInner {
     const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
             block: WrappedPointer::new(mmio_start_addr),
@@ -229,13 +229,13 @@ impl UARTInner {
         self.flush();
     }
 
-    fn read_char(&self) -> Option<u8> {
-        if self.block.fr.matches_all(FR::RXFE::Empty) {
-            return None;
-        }
-
-        Some(self.block.dr.get() as u8)
-    }
+    // fn read_char(&self) -> Option<u8> {
+    //     if self.block.fr.matches_all(FR::RXFE::Empty) {
+    //         return None;
+    //     }
+    //
+    //     Some(self.block.dr.get() as u8)
+    // }
 
     fn read_char_blocking(&self) -> u8 {
         while self.block.fr.matches_all(FR::RXFE::Empty) {}
@@ -249,9 +249,9 @@ impl UARTInner {
         }
     }
 
-    fn clear_rx(&self) {
-        while self.read_char().is_some() {}
-    }
+    // fn clear_rx(&self) {
+    //     while self.read_char().is_some() {}
+    // }
 
     fn flush(&self) {
         while self.block.fr.matches_all(FR::BUSY::SET) {}
@@ -264,8 +264,8 @@ impl UARTInner {
 
         self.block.icr.set(0x7FF);
 
-        self.block.ibrd.set(1);
-        self.block.fbrd.set(0x28);
+        self.block.ibrd.write(IBRD::BAUD_DIVINT.val(1));
+        self.block.fbrd.write(FBRD::BAUD_DIVFRAC.val(40));
 
         self.block.lcrh.write(LCRH::FEN::Enabled + LCRH::WLEN::Len8);
 
@@ -277,10 +277,10 @@ impl UARTInner {
     }
 }
 
-impl UART {
+impl Uart {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: spin::Mutex::new(UARTInner::new(mmio_start_addr)),
+            inner: spin::Mutex::new(UartInner::new(mmio_start_addr)),
         }
     }
 
@@ -292,20 +292,20 @@ impl UART {
         self.inner.lock().write_blocking(s)
     }
 
-    pub fn read_char(&self) -> Option<u8> {
-        self.inner.lock().read_char()
-    }
+    // pub fn read_char(&self) -> Option<u8> {
+    //     self.inner.lock().read_char()
+    // }
 
     pub fn read_char_blocking(&self) -> u8 {
         self.inner.lock().read_char_blocking()
     }
 
-    pub fn clear_rx(&self) {
-        self.inner.lock().clear_rx()
-    }
+    // pub fn clear_rx(&self) {
+    //     self.inner.lock().clear_rx()
+    // }
 }
 
-impl DeviceDriver for UART {
+impl DeviceDriver for Uart {
     fn compat(&self) -> &'static str {
         "BCM PL011 UART"
     }

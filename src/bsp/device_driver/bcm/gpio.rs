@@ -1,9 +1,9 @@
-use crate::arch::cpu::sleep;
+use crate::arch::cpu::sleep_for_cycles;
 use crate::bsp::device_driver::WrappedPointer;
 use crate::common::driver::DeviceDriver;
 use spin::mutex::spin::SpinMutex;
 use tock_registers::interfaces::Writeable;
-use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
+use tock_registers::registers::{ReadWrite};
 use tock_registers::{register_bitfields, register_structs};
 
 register_bitfields! {
@@ -154,15 +154,15 @@ register_structs! {
     }
 }
 
-struct GPIOInner {
+struct GpioInner {
     block: WrappedPointer<GPIORegisterBlock>,
 }
 
-pub struct GPIO {
-    inner: SpinMutex<GPIOInner>,
+pub struct Gpio {
+    inner: SpinMutex<GpioInner>,
 }
 
-impl GPIOInner {
+impl GpioInner {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
             block: WrappedPointer::new(mmio_start_addr),
@@ -171,11 +171,11 @@ impl GPIOInner {
 
     fn disable_pud(&self) {
         self.block.gppup.write(GPPUP::PUD::Off);
-        sleep(150);
+        sleep_for_cycles(20_000);
         self.block
             .gppudclk0
             .write(GPPUDCLK0::PUDCLK14::AssertClock + GPPUDCLK0::PUDCLK15::AssertClock);
-        sleep(150);
+        sleep_for_cycles(20_000);
         self.block.gppup.write(GPPUP::PUD::Off);
         self.block.gppudclk0.set(0);
     }
@@ -189,10 +189,10 @@ impl GPIOInner {
     }
 }
 
-impl GPIO {
+impl Gpio {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: SpinMutex::new(GPIOInner::new(mmio_start_addr)),
+            inner: SpinMutex::new(GpioInner::new(mmio_start_addr)),
         }
     }
 
@@ -201,7 +201,7 @@ impl GPIO {
     }
 }
 
-impl DeviceDriver for GPIO {
+impl DeviceDriver for Gpio {
     fn compat(&self) -> &'static str {
         "BCM GPIO"
     }

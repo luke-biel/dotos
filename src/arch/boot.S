@@ -14,15 +14,6 @@ _start:
     cmp     x1, x2
     b.ne    parking_loop
 
-    ADR_REL x0, __bss_start
-    ADR_REL x1, __bss_end_exclusive
-
-bss_init_loop:
-    cmp     x0, x1
-    b.eq    prepare_rust
-    stp     xzr, xzr, [x0], #16
-    b       bss_init_loop
-
 prepare_rust:
     ADR_REL x0, __boot_core_stack_end_exclusive
     mov     sp, x0

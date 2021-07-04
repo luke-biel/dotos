@@ -26,5 +26,5 @@ impl<T> Deref for WrappedPointer<T> {
     }
 }
 
-pub static GPIO: bcm::gpio::GPIO = unsafe { bcm::gpio::GPIO::new(GPIO_START) };
-pub static PL011_UART: bcm::pl011_uart::UART = unsafe { bcm::pl011_uart::UART::new(UART_START) };
+pub static GPIO: bcm::gpio::Gpio = unsafe { bcm::gpio::Gpio::new(GPIO_START) };
+pub static PL011_UART: bcm::pl011_uart::Uart = unsafe { bcm::pl011_uart::Uart::new(UART_START) };

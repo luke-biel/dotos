@@ -1,4 +1,4 @@
-use crate::arch::wait_forever;
+use crate::arch::cpu::wait_forever;
 use core::panic::PanicInfo;
 
 #[panic_handler]
