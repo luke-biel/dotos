@@ -10,7 +10,6 @@ use crate::common::driver::DriverManager;
 mod arch;
 mod bsp;
 mod panic_handler;
-mod pointer_iter;
 mod common;
 
 unsafe fn kernel_init() -> ! {

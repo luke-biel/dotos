@@ -1,4 +1,3 @@
-use crate::pointer_iter::PointerIter;
 use core::cell::UnsafeCell;
 
 extern "Rust" {
@@ -13,7 +12,3 @@ const MMIO_BASE: usize = 0x3F00_0000;
 
 pub const GPIO_START: usize = MMIO_BASE + GPIO_OFFSET;
 pub const UART_START: usize = MMIO_BASE + UART_OFFSET;
-
-pub fn bss_section() -> PointerIter<i64> {
-    unsafe { PointerIter::new(__bss_start.get(), __bss_end_exclusive.get()) }
-}

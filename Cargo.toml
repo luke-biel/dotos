@@ -5,4 +5,3 @@ edition = "2018"
 
 [dependencies]
 tock-registers = "0.7.0"
-spin = "0.9.1"

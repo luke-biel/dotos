@@ -1,16 +1,11 @@
-use crate::arch::cpu::spin_for_cycles;
-use crate::bsp::device_driver::WrappedPointer;
-use crate::common::driver::DeviceDriver;
-use spin::mutex::spin::SpinMutex;
-use tock_registers::interfaces::Writeable;
-use tock_registers::registers::{ReadWrite};
 use tock_registers::{register_bitfields, register_structs};
+use tock_registers::registers::ReadWrite;
 
 register_bitfields! {
     u32,
 
     /// GPIO Function Select 0
-    GPFSEL0 [
+    pub GPFSEL0 [
         FSEL0 OFFSET(0) NUMBITS(3) [
             Input = 0b000,
             Output = 0b001
@@ -63,7 +58,7 @@ register_bitfields! {
     ],
 
     /// GPIO Function Select 1
-    GPFSEL1 [
+    pub GPFSEL1 [
         FSEL10 OFFSET(0) NUMBITS(3) [
             Input = 0b000,
             Output = 0b001
@@ -151,58 +146,5 @@ register_structs! {
         (0x0000_0094 => pub gppup: ReadWrite<u32, GPPUP::Register>),
         (0x0000_0098 => pub gppudclk0: ReadWrite<u32, GPPUDCLK0::Register>),
         (0x0000_00A2 => @END),
-    }
-}
-
-struct GpioInner {
-    block: WrappedPointer<GPIORegisterBlock>,
-}
-
-pub struct Gpio {
-    inner: GpioInner,
-}
-
-impl GpioInner {
-    pub const unsafe fn new(mmio_start_addr: usize) -> Self {
-        Self {
-            block: WrappedPointer::new(mmio_start_addr),
-        }
-    }
-
-    fn disable_pud(&self) {
-        self.block.gppup.write(GPPUP::PUD::Off);
-        spin_for_cycles(20_000);
-        self.block
-            .gppudclk0
-            .write(GPPUDCLK0::PUDCLK14::AssertClock + GPPUDCLK0::PUDCLK15::AssertClock);
-        spin_for_cycles(20_000);
-        self.block.gppup.write(GPPUP::PUD::Off);
-        self.block.gppudclk0.set(0);
-    }
-
-    pub fn map_pl011_uart(&self) {
-        self.block
-            .gpfsel1
-            .write(GPFSEL1::FSEL15::AltFunc0 + GPFSEL1::FSEL14::AltFunc0);
-
-        self.disable_pud();
-    }
-}
-
-impl Gpio {
-    pub const unsafe fn new(mmio_start_addr: usize) -> Self {
-        Self {
-            inner: GpioInner::new(mmio_start_addr),
-        }
-    }
-
-    pub fn map_pl011_uart(&self) {
-        self.inner.map_pl011_uart()
-    }
-}
-
-impl DeviceDriver for Gpio {
-    fn compat(&self) -> &'static str {
-        "BCM GPIO"
     }
 }

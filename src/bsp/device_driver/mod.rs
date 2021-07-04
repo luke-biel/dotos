@@ -18,9 +18,6 @@ impl<T> WrappedPointer<T> {
     }
 }
 
-unsafe impl<T> Send for WrappedPointer<T> {}
-unsafe impl<T> Sync for WrappedPointer<T> {}
-
 impl<T> Deref for WrappedPointer<T> {
     type Target = T;
 
