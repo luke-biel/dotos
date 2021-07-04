@@ -1,0 +1,26 @@
+rule cargo
+    command = cargo build --release
+
+rule objcopy
+    command = rust-objcopy -O binary --strip-all $in $out
+
+rule clean
+    command = cargo clean && rm -f kernel8.img
+
+rule cp
+    command = cp $in $target
+
+rule minicom
+    command = minicom
+
+build target/dotos.elf: cargo
+build kernel8.img: objcopy target/dotos.elf
+
+default kernel8.img
+
+build cp: cp kernel8.img
+    target = /Volumes/boot
+
+build minicom: minicom
+
+build clean: clean
