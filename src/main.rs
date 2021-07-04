@@ -1,21 +1,32 @@
-#![allow(clippy::upper_case_acronyms)]
-#![feature(core_intrinsics, global_asm, asm, stdsimd)]
+#![feature(global_asm)]
+#![feature(asm)]
 #![no_std]
 #![no_main]
 
-use crate::bsp::driver::driver_manager;
+use crate::bsp::device_driver::PL011_UART;
+use crate::bsp::raspberry_pi_3::driver::driver_manager;
 use crate::common::driver::DriverManager;
-use bsp::device_driver::bcm::bcm2xxx_pl011_uart::uart::UART;
-use core::intrinsics::abort;
-use core::panic::PanicInfo;
 
 mod arch;
 mod bsp;
-mod common;
+mod panic_handler;
 mod pointer_iter;
+mod common;
 mod runtime;
 
-#[allow(clippy::empty_loop)]
+unsafe fn kernel_init() -> ! {
+    let manager = driver_manager();
+    for driver in manager.all().iter() {
+        if let Err(err) = driver.init() {
+            panic!("Error initializing driver {}: {}", driver.compat(), err);
+        }
+    }
+
+    manager.post_device_driver_init();
+
+    kernel_main()
+}
+
 unsafe fn kernel_main() -> ! {
     println!(
         "> {} - v{}",
@@ -30,29 +41,10 @@ unsafe fn kernel_main() -> ! {
         println!("> {}: {}", i, driver.compat())
     }
 
-    let uart = UART::new(0x2020_1000usize);
+    let uart = &PL011_UART;
 
     loop {
         let printme = uart.read_char_blocking();
         println!("Hello, {}", printme as char);
     }
-}
-
-#[panic_handler]
-unsafe fn panic(_info: &PanicInfo) -> ! {
-    // TODO: Reinit UART, print what happened
-    abort()
-}
-
-pub(crate) unsafe fn kernel_init() -> ! {
-    let manager = driver_manager();
-    for driver in manager.all().iter() {
-        if let Err(err) = driver.init() {
-            panic!("Error initializing driver {}: {}", driver.compat(), err);
-        }
-    }
-
-    manager.post_device_driver_init();
-
-    kernel_main()
 }

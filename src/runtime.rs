@@ -1,6 +1,6 @@
-use crate::bsp::mem::bss_section;
 use crate::common::mem::zero_region_volatile;
 use crate::kernel_init;
+use crate::bsp::raspberry_pi_3::mem::bss_section;
 
 unsafe fn clear_bss() {
     zero_region_volatile(bss_section());

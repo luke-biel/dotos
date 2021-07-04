@@ -1,25 +1,8 @@
 [package]
 name = "dotos"
 version = "0.1.0"
-authors = ["Łukasz Biel <lukasz.p.biel@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-cfg-if   = "1.0.0"
-register = "1.0.2"
-spin     = "0.9.1"
-tock-registers = { git = "https://github.com/tock/tock" }
-
-[features]
-default = ["rpi1", "aarch32"]
-rpi1 = []
-aarch32 = []
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"
-
-[patch.crates-io]
-tock-registers = { git = "https://github.com/tock/tock" }
+tock-registers = "0.7.0"
+spin = "0.9.1"

@@ -1,10 +1,8 @@
-use core::marker::PhantomData;
-use core::ops::Deref;
-
 pub mod bcm;
 
-pub use bcm::bcm2xxx_gpio::GPIO;
-pub use bcm::bcm2xxx_pl011_uart::uart::UART;
+use crate::bsp::raspberry_pi_3::mem::{GPIO_START, UART_START};
+use core::marker::PhantomData;
+use core::ops::Deref;
 
 pub struct WrappedPointer<T> {
     pointer: usize,
@@ -27,3 +25,6 @@ impl<T> Deref for WrappedPointer<T> {
         unsafe { &*(self.pointer as *const _) }
     }
 }
+
+pub static GPIO: bcm::gpio::GPIO = unsafe { bcm::gpio::GPIO::new(GPIO_START) };
+pub static PL011_UART: bcm::pl011_uart::UART = unsafe { bcm::pl011_uart::UART::new(UART_START) };

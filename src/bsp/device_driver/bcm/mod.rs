@@ -1,2 +1,2 @@
-pub mod bcm2xxx_gpio;
-pub mod bcm2xxx_pl011_uart;
+pub mod gpio;
+pub mod pl011_uart;

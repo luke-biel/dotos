@@ -27,7 +27,7 @@ impl UARTInner {
             self.block.dr.set(c as u32);
         }
 
-        self.flush()
+        self.flush();
     }
 
     fn read_char(&self) -> Option<u8> {
@@ -39,17 +39,24 @@ impl UARTInner {
     }
 
     fn read_char_blocking(&self) -> u8 {
-        while self.block.fr.matches_all(FR::RXFE::Empty) {
-            nop()
-        }
+        while self.block.fr.matches_all(FR::RXFE::Empty) {}
 
-        self.block.dr.get() as u8
+        let c = self.block.dr.get() as u8;
+
+        if c == b'\r' {
+            b'\n'
+        } else {
+            c
+        }
+    }
+
+    fn clear_rx(&self) {
+        while self.read_char().is_some() {}
     }
 
     fn flush(&self) {
-        while self.block.fr.matches_all(FR::BUSY::SET) {
-            nop();
-        }
+        while self.block.fr.matches_all(FR::BUSY::SET + FR::TXFF::Full) {}
+        crate::arch::cpu::sleep(24_000);
     }
 
     fn map_pl011_uart(&self) {
@@ -93,6 +100,10 @@ impl UART {
 
     pub fn read_char_blocking(&self) -> u8 {
         self.inner.lock().read_char_blocking()
+    }
+
+    pub fn clear_rx(&self) {
+        self.inner.lock().clear_rx()
     }
 }
 

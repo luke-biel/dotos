@@ -1,11 +1,6 @@
-use cfg_if::cfg_if;
 use core::fmt;
 
-cfg_if! {
-    if #[cfg(feature = "rpi1")] {
-        use crate::bsp::io::uart_console::UartConsole as Console;
-    }
-}
+use crate::bsp::raspberry_pi_3::io::uart_console::UartConsole as Console;
 
 #[macro_export]
 macro_rules! println {
