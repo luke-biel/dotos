@@ -1,6 +1,6 @@
-use inner::GpioInner;
 use crate::common::driver::DeviceDriver;
-use crate::common::sync::{NullLock, Mutex};
+use crate::common::sync::{Mutex, NullLock};
+use inner::GpioInner;
 
 mod inner;
 mod registers;
@@ -24,5 +24,10 @@ impl Gpio {
 impl DeviceDriver for Gpio {
     fn compat(&self) -> &'static str {
         "BCM GPIO"
+    }
+    unsafe fn late_init(&self) -> Result<(), &'static str> {
+        self.map_pl011_uart();
+
+        Ok(())
     }
 }

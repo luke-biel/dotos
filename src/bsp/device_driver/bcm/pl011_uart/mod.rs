@@ -1,6 +1,6 @@
-use crate::common::driver::DeviceDriver;
-use crate::common::sync::{NullLock, Mutex};
 use crate::bsp::device_driver::bcm::pl011_uart::inner::UartInner;
+use crate::common::driver::DeviceDriver;
+use crate::common::sync::{Mutex, NullLock};
 
 mod inner;
 mod registers;

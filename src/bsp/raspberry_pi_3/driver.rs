@@ -18,7 +18,23 @@ impl DriverManager for BspDriverManager {
         &self.drivers
     }
 
-    fn post_device_driver_init(&self) {
-        GPIO.map_pl011_uart()
+    unsafe fn init(&self) {
+        for driver in &self.drivers {
+            if let Err(error) = driver.init() {
+                panic!("Error initializing driver {}: {}", driver.compat(), error);
+            }
+        }
+    }
+
+    unsafe fn late_init(&self) {
+        for driver in &self.drivers {
+            if let Err(error) = driver.late_init() {
+                panic!(
+                    "Error running late_init for driver {}: {}",
+                    driver.compat(),
+                    error
+                );
+            }
+        }
     }
 }

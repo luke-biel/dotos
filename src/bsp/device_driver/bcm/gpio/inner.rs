@@ -1,7 +1,9 @@
-use tock_registers::interfaces::Writeable;
 use crate::arch::cpu::spin_for_cycles;
+use crate::bsp::device_driver::bcm::gpio::registers::{
+    GPIORegisterBlock, GPFSEL1, GPPUDCLK0, GPPUP,
+};
 use crate::bsp::device_driver::WrappedPointer;
-use crate::bsp::device_driver::bcm::gpio::registers::{GPIORegisterBlock, GPPUDCLK0, GPPUP, GPFSEL1};
+use tock_registers::interfaces::Writeable;
 
 pub struct GpioInner {
     block: WrappedPointer<GPIORegisterBlock>,

@@ -1,6 +1,6 @@
-use tock_registers::interfaces::{Readable, Writeable};
+use super::registers::{UARTRegisterBlock, CR, FBRD, FR, IBRD, ICR, LCRH};
 use crate::bsp::device_driver::WrappedPointer;
-use super::registers::{FR,ICR, IBRD, FBRD, LCRH, CR, UARTRegisterBlock};
+use tock_registers::interfaces::{Readable, Writeable};
 
 pub struct UartInner {
     block: WrappedPointer<UARTRegisterBlock>,
@@ -20,7 +20,7 @@ impl UartInner {
         }
     }
 
-    pub  fn read_char_blocking(&self) -> u8 {
+    pub fn read_char_blocking(&self) -> u8 {
         while self.block.fr.matches_all(FR::RXFE::Empty) {
             unsafe { asm!("nop") }
         }
@@ -34,7 +34,7 @@ impl UartInner {
         }
     }
 
-    pub  fn flush(&self) {
+    pub fn flush(&self) {
         while self.block.fr.matches_all(FR::BUSY::SET) {
             unsafe { asm!("nop") }
         }

@@ -1,5 +1,5 @@
-use tock_registers::{register_bitfields, register_structs};
 use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
+use tock_registers::{register_bitfields, register_structs};
 
 register_bitfields! {
     u32,

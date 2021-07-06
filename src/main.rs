@@ -9,18 +9,14 @@ use crate::common::driver::DriverManager;
 
 mod arch;
 mod bsp;
-mod panic_handler;
 mod common;
+mod panic_handler;
 
 unsafe fn kernel_init() -> ! {
     let manager = driver_manager();
-    for driver in manager.all().iter() {
-        if let Err(err) = driver.init() {
-            panic!("Error initializing driver {}: {}", driver.compat(), err);
-        }
-    }
 
-    manager.post_device_driver_init();
+    manager.init();
+    manager.late_init();
 
     kernel_main()
 }
