@@ -25,6 +25,7 @@ impl DeviceDriver for Gpio {
     fn compat(&self) -> &'static str {
         "BCM GPIO"
     }
+
     unsafe fn late_init(&self) -> Result<(), &'static str> {
         self.map_pl011_uart();
 

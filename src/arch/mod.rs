@@ -1,2 +1,3 @@
-pub mod boot;
-pub mod cpu;
+pub mod aarch64;
+
+pub use aarch64::{cpu, boot, timer};

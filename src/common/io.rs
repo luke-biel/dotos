@@ -5,7 +5,7 @@ use crate::bsp::raspberry_pi_3::io::uart_console::UartConsole as Console;
 #[macro_export]
 macro_rules! println {
     () => (print!("\n"));
-    ($($arg:tt)*) => (print!("{}\n", format_args!($($arg)*)));
+    ($($arg:tt)*) => (crate::print!("{}\n", format_args!($($arg)*)));
 }
 
 #[macro_export]
