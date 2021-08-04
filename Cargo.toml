@@ -5,3 +5,4 @@ edition = "2018"
 
 [dependencies]
 tock-registers = "0.7.0"
+cortex-a = "6.0.0"

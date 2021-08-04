@@ -3,9 +3,19 @@
 version = 3
 
 [[package]]
+name = "cortex-a"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d25a057b35117d030453cd322f7adbdd331e886bc5bde46cdae656952c4feba6"
+dependencies = [
+ "tock-registers",
+]
+
+[[package]]
 name = "dotos"
 version = "0.1.0"
 dependencies = [
+ "cortex-a",
  "tock-registers",
 ]
 

@@ -1,16 +1,12 @@
 use crate::arch::aarch64::barrier::isb;
 use core::time::Duration;
-use crate::println;
 
 pub struct Timer;
 
 impl Timer {
-
     pub fn time_since_start(&self) -> Duration {
         let time = unsafe { hardware_time() } * 1_000_000_000;
         let freq = unsafe { frequency() } as u64;
-
-        println!("eaoea {}, {}", time, freq);
 
         Duration::from_nanos(time / freq)
     }

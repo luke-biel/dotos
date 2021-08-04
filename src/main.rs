@@ -6,7 +6,7 @@
 use crate::bsp::device_driver::PL011_UART;
 use crate::bsp::raspberry_pi_3::driver::driver_manager;
 use crate::common::driver::DriverManager;
-use crate::arch::timer::Timer;
+use crate::arch::aarch64::exceptions::{print_state, current_privilege_level};
 
 mod arch;
 mod bsp;
@@ -23,27 +23,29 @@ unsafe fn kernel_init() -> ! {
 }
 
 unsafe fn kernel_main() -> ! {
-    let timer = Timer;
-
-    println!(
+    info!(
         "> {} - v{}",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION")
     );
-    println!("> build time: {}", env!("BUILD_DATE"));
-    println!("> git head: {}", env!("GIT_HASH"));
+    info!("> build time: {}", env!("BUILD_DATE"));
+    info!("> git head: {}", env!("GIT_HASH"));
 
-    println!("> drivers loaded:");
+    info!("> drivers loaded:");
     for (i, driver) in driver_manager().all().iter().enumerate() {
-        println!("> {}: {}", i, driver.compat())
+        info!("> {}: {}", i, driver.compat())
     }
 
-    println!("time is {}s", timer.time_since_start().as_secs_f64());
+    let (_, privilege_level) = current_privilege_level();
+    info!("Current privilege level: {}", privilege_level);
+
+    info!("Exception handling state:");
+    print_state();
 
     let uart = &PL011_UART;
 
     loop {
         let printme = uart.read_char_blocking();
-        println!("Hello, {}", printme as char);
+        info!("Hello, {}", printme as char);
     }
 }
