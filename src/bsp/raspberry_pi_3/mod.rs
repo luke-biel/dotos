@@ -1,6 +1,6 @@
 pub mod driver;
 pub mod io;
-pub mod mem;
+pub mod memory;
 
 #[no_mangle]
 #[link_section = ".text._start_arguments"]

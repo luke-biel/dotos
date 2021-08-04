@@ -1,6 +1,6 @@
 pub mod bcm;
 
-use crate::bsp::raspberry_pi_3::mem::{GPIO_START, UART_START};
+use crate::bsp::raspberry_pi_3::memory::{GPIO_START, UART_START};
 use core::marker::PhantomData;
 use core::ops::Deref;
 
