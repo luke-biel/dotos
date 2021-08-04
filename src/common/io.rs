@@ -10,8 +10,8 @@ macro_rules! println {
 
 #[macro_export]
 macro_rules! info {
-    () => (crate::print!("[I {}s]: null\n", arch::aarch64::timer::Timer.time_since_start().as_secs_f64()));
-    ($($arg:tt)*) => (crate::print!("[I {}s]: {}\n", arch::aarch64::timer::Timer.time_since_start().as_secs_f64(), format_args!($($arg)*)));
+    () => (crate::print!("[I {:.6}s]: null\n", crate::arch::aarch64::timer::Timer.time_since_start().as_secs_f64()));
+    ($($arg:tt)*) => (crate::print!("[I {:.6}s]: {}\n", crate::arch::aarch64::timer::Timer.time_since_start().as_secs_f64(), format_args!($($arg)*)));
 }
 
 #[macro_export]
