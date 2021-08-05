@@ -1,4 +1,4 @@
-use cortex_a::asm::{wfe, nop};
+use cortex_a::asm::{nop, wfe};
 
 pub fn spin_for_cycles(count: u32) {
     for _ in 0..count {

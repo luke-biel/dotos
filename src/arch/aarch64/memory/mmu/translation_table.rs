@@ -3,6 +3,8 @@ use tock_registers::fields::FieldValue;
 use tock_registers::interfaces::{Readable, Writeable};
 use tock_registers::register_bitfields;
 use tock_registers::registers::InMemoryRegister;
+use crate::arch::aarch64::memory::mmu::{Granule64KB, mair, Granule512MB};
+use crate::bsp::raspberry_pi_3::memory::mmu::{LAYOUT, KernelAddressSpace};
 
 register_bitfields! {u64,
     STAGE1_TABLE_DESCRIPTOR [
@@ -66,15 +68,17 @@ register_bitfields! {u64,
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct TableDescriptor(u64);
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct PageDescriptor(u64);
 
-pub const NUM_LVL2_TABLES: usize = todo!();
+pub const NUM_LVL2_TABLES: usize = KernelAddressSpace::SIZE >> Granule512MB::SHIFT;,
 
 #[repr(C)]
-#[repr(align(2 ^ 16))]
+#[repr(align(65536))]
 pub struct FixedSizeTranslationTable<const NUM: usize> {
     level_3: [[PageDescriptor; 8192]; NUM],
     level_2: [TableDescriptor; NUM],
@@ -183,9 +187,9 @@ impl<const NUM: usize> FixedSizeTranslationTable<NUM> {
             );
 
             for (l3_idx, l3_entry) in self.level_3[l2_idx].iter_mut().enumerate() {
-                let vaddr = (l2_idx << Granule512MB::SHIFT) + (l3_idx << Granule64KB);
+                let vaddr = (l2_idx << Granule512MB::SHIFT) + (l3_idx << Granule64KB::SHIFT);
 
-                let (paddr, attributes) = virtual_memory_layout().vaddr_properties(vaddr)?;
+                let (paddr, attributes) = LAYOUT.properties(vaddr)?;
 
                 *l3_entry = PageDescriptor::from_output_addr(paddr, attributes);
             }

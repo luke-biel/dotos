@@ -1,12 +1,13 @@
 #![feature(global_asm)]
 #![feature(asm)]
+#![feature(const_panic)]
 #![no_std]
 #![no_main]
 
+use crate::arch::aarch64::exceptions::{current_privilege_level, print_state};
 use crate::bsp::device_driver::PL011_UART;
 use crate::bsp::raspberry_pi_3::driver::driver_manager;
 use crate::common::driver::DriverManager;
-use crate::arch::aarch64::exceptions::{print_state, current_privilege_level};
 
 mod arch;
 mod bsp;

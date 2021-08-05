@@ -32,10 +32,10 @@ pub struct Attributes {
 }
 
 pub struct TranslationDescriptor {
-    name: &'static str,
-    virtual_range: &'static dyn Fn() -> RangeInclusive<usize>,
-    translation: Translation,
-    attributes: Attributes,
+    pub name: &'static str,
+    pub virtual_range: fn() -> RangeInclusive<usize>,
+    pub translation: Translation,
+    pub attributes: Attributes,
 }
 
 pub struct KernelVirtualLayout<const COUNT: usize> {
