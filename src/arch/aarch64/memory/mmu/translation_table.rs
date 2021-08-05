@@ -75,7 +75,7 @@ pub struct TableDescriptor(u64);
 #[derive(Copy, Clone, Debug)]
 pub struct PageDescriptor(u64);
 
-pub const NUM_LVL2_TABLES: usize = KernelAddressSpace::SIZE >> Granule512MB::SHIFT;,
+pub const NUM_LVL2_TABLES: usize = KernelAddressSpace::SIZE >> Granule512MB::SHIFT;
 
 #[repr(C)]
 #[repr(align(65536))]
