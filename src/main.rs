@@ -8,6 +8,8 @@ use crate::arch::aarch64::exceptions::{current_privilege_level, print_state};
 use crate::bsp::device_driver::PL011_UART;
 use crate::bsp::raspberry_pi_3::driver::driver_manager;
 use crate::common::driver::DriverManager;
+use crate::arch::aarch64::memory::mmu::{MMU};
+use crate::common::memory::interface::MMUInterface;
 
 mod arch;
 mod bsp;
@@ -15,6 +17,10 @@ mod common;
 mod panic_handler;
 
 unsafe fn kernel_init() -> ! {
+    if let Err(e) = MMU.enable_mmu_and_caching() {
+        panic!("MMU error: {:?}", e);
+    }
+
     let manager = driver_manager();
 
     manager.init();
@@ -44,9 +50,17 @@ unsafe fn kernel_main() -> ! {
     print_state();
 
     let uart = &PL011_UART;
+    let mut buf = [0u8; 512];
+    let mut idx = 0;
 
     loop {
-        let printme = uart.read_char_blocking();
-        info!("Hello, {}", printme as char);
+        let c = uart.read_char_blocking();
+        if c == b'\n' {
+            info!("\n{}", core::str::from_utf8_unchecked(&buf[0..=idx]));
+        } else {
+            buf[idx] = c;
+            idx += 1;
+            print!("{}", c as char);
+        }
     }
 }

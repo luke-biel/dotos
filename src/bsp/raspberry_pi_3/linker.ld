@@ -14,6 +14,7 @@ SECTIONS
 
    __boot_core_stack_end_exclusive = .;
 
+    __rx_start = .;
     .text :
     {
         KEEP(*(.text._start))
@@ -24,6 +25,9 @@ SECTIONS
 
     .rodata : ALIGN(8) { *(.rodata*) } :segment_rx
     .got    : ALIGN(8) { *(.got)     } :segment_rx
+
+    . = ALIGN(64K);
+    __rx_end_exclusive = .;
 
     .data : { *(.data*) } :segment_rw
 
