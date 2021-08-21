@@ -3,6 +3,11 @@ name = "dotos"
 version = "0.1.0"
 edition = "2018"
 
+[features]
+default = ["rpi3"]
+rpi3 = []
+
 [dependencies]
+num-derive = "0.3.3"
+num-traits = { version = "0.2.14", default-features = false }
 tock-registers = "0.7.0"
-cortex-a = "6.0.0"

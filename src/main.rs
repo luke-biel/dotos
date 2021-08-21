@@ -1,30 +1,37 @@
-#![feature(global_asm)]
-#![feature(asm)]
-#![feature(const_panic)]
 #![no_std]
 #![no_main]
+#![feature(asm)]
+#![feature(crate_visibility_modifier)]
+#![feature(core_intrinsics)]
+#![feature(const_panic)]
+#![feature(panic_info_message)]
+#![feature(format_args_nl)]
 
-use crate::arch::aarch64::exceptions::{current_privilege_level, print_state};
-use crate::bsp::device_driver::PL011_UART;
-use crate::bsp::raspberry_pi_3::driver::driver_manager;
-use crate::common::driver::DriverManager;
-use crate::arch::aarch64::memory::mmu::{MMU};
-use crate::common::memory::interface::MMUInterface;
+use crate::{
+    arch::arch_impl::cpu::instructions::wfe,
+    bsp::device::statics,
+    common::{driver::DriverManager, memory::mmu::MemoryManagementUnit},
+};
+use crate::common::statics::{BSP_DRIVER_MANAGER, UART_DRIVER};
+use crate::arch::arch_impl::cpu::registers::current_el;
+use crate::arch::arch_impl::exception::current_privilege_level;
+use crate::common::serial_console::Read;
 
-mod arch;
+crate mod arch;
 mod bsp;
-mod common;
-mod panic_handler;
+crate mod common;
+mod log;
+mod panic;
 
 unsafe fn kernel_init() -> ! {
-    if let Err(e) = MMU.enable_mmu_and_caching() {
-        panic!("MMU error: {:?}", e);
-    }
+    arch::arch_impl::statics::MMU
+        .enable_mmu_and_caching()
+        .expect("mmu init");
 
-    let manager = driver_manager();
-
-    manager.init();
-    manager.late_init();
+    statics::BSP_DRIVER_MANAGER.init().expect("driver init");
+    statics::BSP_DRIVER_MANAGER
+        .late_init()
+        .expect("driver late_init");
 
     kernel_main()
 }
@@ -39,27 +46,24 @@ unsafe fn kernel_main() -> ! {
     info!("> git head: {}", env!("GIT_HASH"));
 
     info!("> drivers loaded:");
-    for (i, driver) in driver_manager().all().iter().enumerate() {
+    for (i, driver) in BSP_DRIVER_MANAGER.drivers.iter().enumerate() {
         info!("> {}: {}", i, driver.compat())
     }
 
-    let (_, privilege_level) = current_privilege_level();
+    let privilege_level = current_privilege_level();
     info!("Current privilege level: {}", privilege_level);
 
-    info!("Exception handling state:");
-    print_state();
-
-    let uart = &PL011_UART;
     let mut buf = [0u8; 512];
     let mut idx = 0;
 
     loop {
-        let c = uart.read_char_blocking();
+        let c = UART_DRIVER.read_char() as u8;
+        buf[idx] = c;
+        idx += 1;
         if c == b'\n' {
             info!("\n{}", core::str::from_utf8_unchecked(&buf[0..=idx]));
+            idx = 0;
         } else {
-            buf[idx] = c;
-            idx += 1;
             print!("{}", c as char);
         }
     }

@@ -8,7 +8,7 @@ pub trait Mutex {
 }
 
 /// Single threaded synchronization provider.
-/// Don't use on mt environments or with interrupts turned on.
+/// Don't use on m-t environments or with interrupts turned on.
 pub struct NullLock<T: Sized> {
     data: UnsafeCell<T>,
 }

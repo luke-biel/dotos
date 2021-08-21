@@ -1,2 +1,7 @@
 pub mod device_driver;
-pub mod raspberry_pi_3;
+
+#[cfg(feature = "rpi3")]
+pub mod rpi3;
+
+#[cfg(feature = "rpi3")]
+pub use rpi3 as device;

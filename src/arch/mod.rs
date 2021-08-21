@@ -1,3 +1,5 @@
-pub mod aarch64;
+#[cfg(target_arch = "aarch64")]
+pub use aarch64 as arch_impl;
 
-pub use aarch64::{boot, cpu, timer};
+#[cfg(target_arch = "aarch64")]
+pub mod aarch64;

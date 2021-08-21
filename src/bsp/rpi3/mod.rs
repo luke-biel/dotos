@@ -1,5 +1,4 @@
 pub mod cpu;
+pub mod driver;
 pub mod memory;
 pub mod statics;
-pub mod time;
-pub mod exception;

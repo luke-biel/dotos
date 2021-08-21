@@ -1,84 +1,87 @@
-use crate::arch::aarch64::memory::mmu::translation_table::KernelTranslationTable;
-use crate::common::memory::interface::MMUInterface;
-use crate::common::memory::{AddressSpace, TranslationGranule};
-use cortex_a::asm::{barrier};
-use cortex_a::registers::*;
-use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
-use crate::bsp::raspberry_pi_3::memory::mmu::KernelAddressSpace;
+use core::intrinsics::unlikely;
+
+use crate::{
+    arch::arch_impl::memory::mmu::translation_table::KernelTranslationTable,
+    bsp::device::memory::mmu::KernelAddrSpace,
+    common::memory::mmu::{AddressSpace, MemoryManagementUnit, TranslationGranule},
+};
 
 pub mod mair;
 pub mod translation_table;
 
-pub struct MemoryManagementUnit;
+pub struct Aarch64MemoryManagementUnit;
 
-pub type Granule64KB = TranslationGranule<{ 64 * 1024 }>;
 pub type Granule512MB = TranslationGranule<{ 512 * 1024 * 1024 }>;
+pub type Granule64KB = TranslationGranule<{ 64 * 1024 }>;
 
-pub static mut KERNEL_TABLES: KernelTranslationTable = KernelTranslationTable::new();
-pub static MMU: MemoryManagementUnit = MemoryManagementUnit;
+static mut KERNEL_TABLES: KernelTranslationTable = KernelTranslationTable::new();
 
 impl<const SIZE: usize> AddressSpace<SIZE> {
-    pub const fn arch_address_space_size_sanity_check() {
-        assert!(SIZE % Granule512MB::SIZE == 0);
-        assert!(SIZE <= 1 << 48);
+    pub const fn arch_address_space_size_sanity_checks() {
+        assert!((SIZE % Granule512MB::SIZE) == 0);
+        assert!(SIZE <= (1 << 48));
     }
 }
 
-impl MemoryManagementUnit {
+impl Aarch64MemoryManagementUnit {
     fn setup_mair(&self) {
-        MAIR_EL1.write(
-            MAIR_EL1::Attr1_Normal_Outer::WriteBack_NonTransient_ReadWriteAlloc
-                + MAIR_EL1::Attr1_Normal_Inner::WriteBack_NonTransient_ReadWriteAlloc
-                + MAIR_EL1::Attr0_Device::nonGathering_nonReordering_EarlyWriteAck,
-        );
+        let mair_el1: u64 = 0b1111_1111_0000_0100;
+        unsafe { asm!("msr mair_el1, {}", in(reg) mair_el1, options(nostack, nomem)) };
     }
 
-    fn configure_translation_table(&self) {
-        let t0sz = (64 - KernelAddressSpace::SHIFT) as u64;
+    fn configure_translation_control(&self) {
+        let t0sz = (64 - KernelAddrSpace::SHIFT) as u64;
 
-        TCR_EL1.write(
-            TCR_EL1::TBI0::Used
-                + TCR_EL1::IPS::Bits_40
-                + TCR_EL1::TG0::KiB_64
-                + TCR_EL1::SH0::Inner
-                + TCR_EL1::ORGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
-                + TCR_EL1::IRGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
-                + TCR_EL1::EPD0::EnableTTBR0Walks
-                + TCR_EL1::A1::TTBR0
-                + TCR_EL1::T0SZ.val(t0sz)
-                + TCR_EL1::EPD1::DisableTTBR1Walks,
-        );
+        let tcr_el1: u64 = (1 << 37) // TBI0
+            + (0b010 << 32) // IPS
+            + (0b01 << 14) // TG0
+            + (0b11 << 12) // SH0
+            + (0b01 << 10) // ORGN0
+            + (0b01 << 8) // IRGN0
+            // + (0 << 7) // EPD0
+            // + (0 << 22) // A1
+            + (t0sz & 0b11_1111) // T0SZ
+            + (1 << 23); // EPD1
+        unsafe { asm!("msr tcr_el1, {}", in(reg) tcr_el1, options(nostack, nomem)) };
     }
 }
 
-impl MMUInterface for MemoryManagementUnit {
+impl MemoryManagementUnit for Aarch64MemoryManagementUnit {
     unsafe fn enable_mmu_and_caching(&self) -> Result<(), &'static str> {
-        if self.is_enabled() {
-            return Err("aleardy enabled");
+        if unlikely(self.is_enabled()) {
+            return Err("MMU is already enabled");
         }
 
-        if !ID_AA64MMFR0_EL1.matches_all(ID_AA64MMFR0_EL1::TGran64::Supported) {
-            return Err("Translation granule not supported by hardware");
+        let granule_size: u64;
+        asm!("mrs {}, id_aa64mmfr0_el1", out(reg) granule_size, options(nostack, nomem));
+        if unlikely((granule_size & (0b1111 << 24)) != 0) {
+            return Err("translation granule size not supported by hw");
         }
 
         self.setup_mair();
 
-        KERNEL_TABLES.populate_table_entries()?;
+        KERNEL_TABLES
+            .populate()
+            .map_err(|_| "failed to populate translation tables")?;
 
-        TTBR0_EL1.set_baddr(KERNEL_TABLES.base_paddr());
+        let baddr: u64 = KERNEL_TABLES.base_paddr() >> 1 << 1;
+        asm!("msr ttbr0_el1, {}", in(reg) baddr, options(nostack, nomem));
 
-        self.configure_translation_table();
+        self.configure_translation_control();
 
-        barrier::isb(barrier::SY);
+        asm!("isb sy");
 
-        SCTLR_EL1.modify(SCTLR_EL1::M::Enable + SCTLR_EL1::C::Cacheable + SCTLR_EL1::I::Cacheable);
+        let sctlr_el1: u64 = (1 << 12) + (1 << 2) + 1;
+        asm!("msr sctlr_el1, {}", in(reg) sctlr_el1, options(nostack, nomem));
 
-        barrier::isb(barrier::SY);
+        asm!("isb sy");
 
         Ok(())
     }
 
     fn is_enabled(&self) -> bool {
-        SCTLR_EL1.matches_all(SCTLR_EL1::M::Enable)
+        let sctlr_el1: u64;
+        unsafe { asm!("mrs {}, sctlr_el1", out(reg) sctlr_el1, options(nostack, nomem)) };
+        sctlr_el1 & 1 > 0
     }
 }
