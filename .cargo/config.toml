@@ -1,7 +1,0 @@
-[build]
-target = "aarch64-unknown-none-softfloat"
-rustflags = [
-    "-C", "target-cpu=cortex-a53",
-    "-C", "link-arg=-Tsrc/bsp/raspberry_pi_3/linker.ld",
-    "-C", "link-arg=-otarget/dotos.elf",
-]
