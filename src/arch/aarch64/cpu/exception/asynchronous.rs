@@ -34,7 +34,7 @@ impl Display for Mask {
             Mask::Masked => "masked",
             Mask::Unmasked => "unmasked",
         }
-            .fmt(f)
+        .fmt(f)
     }
 }
 

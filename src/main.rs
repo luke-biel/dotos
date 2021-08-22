@@ -9,11 +9,9 @@
 #![feature(global_asm)]
 
 use crate::{
-    arch::{
-        arch_impl::{
-            exception::current_privilege_level,
-            cpu::exception::asynchronous::get_mask_state
-        },
+    arch::arch_impl::{
+        cpu::exception::{asynchronous::get_mask_state, init_exception_handling},
+        exception::current_privilege_level,
     },
     common::{
         driver::DriverManager,
@@ -30,6 +28,8 @@ mod log;
 mod panic;
 
 unsafe fn kernel_init() -> ! {
+    init_exception_handling();
+
     statics::MMU.enable_mmu_and_caching().expect("mmu init");
 
     statics::BSP_DRIVER_MANAGER.init().expect("driver init");
@@ -57,6 +57,10 @@ unsafe fn kernel_main() -> ! {
     let privilege_level = current_privilege_level();
     info!("Current privilege level: {}", privilege_level);
     info!("Exception Status: {}", get_mask_state());
+
+    unsafe {
+        core::ptr::read_volatile((1_u64 << 33) as *mut u64);
+    }
 
     let mut buf = [0u8; 512];
     let mut idx = 0;

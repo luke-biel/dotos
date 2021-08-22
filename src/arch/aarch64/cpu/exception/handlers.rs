@@ -1,10 +1,9 @@
-use crate::arch::arch_impl::cpu::exception::ExceptionContext;
-use crate::arch::arch_impl::cpu::instructions::eret;
+use crate::arch::arch_impl::cpu::{exception::ExceptionContext, instructions::eret};
 
 unsafe fn default_handler(e: &mut ExceptionContext) {
     let far_el1: u64;
     asm!("mrs {}, far_el1", out(reg) far_el1, options(nostack, nomem));
-    panic!("CPU Exception\nFAR_EL1: {:#018x}\n{:?}", far_el1, e)
+    panic!("CPU Exception\nfar_el1: {:#018x}\n{}", far_el1, e)
 }
 
 #[no_mangle]
