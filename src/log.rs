@@ -27,7 +27,7 @@ macro_rules! log {
         let ts = $crate::common::statics::TIMER.uptime();
         let sts = ts.subsec_micros();
 
-        if $crate::common::statics::LOG_LEVEL > $log_lv {
+        if $crate::common::statics::LOG_LEVEL >= $log_lv {
             $crate::log::_print(
                 format_args_nl!(
                     concat!("(", $log_kw, ")", "[{:>3}.{:03}{:03}] ", $s),
@@ -44,7 +44,7 @@ macro_rules! log {
         let ts = $crate::common::statics::TIMER.uptime();
         let sts = ts.subsec_micros();
 
-        if $crate::common::statics::LOG_LEVEL > $log_lv {
+        if $crate::common::statics::LOG_LEVEL >= $log_lv {
             $crate::log::_print(
                     format_args_nl!(
                     concat!("(", $log_kw, ")", "[{:>3}.{:03}{:03}] ", $fs),
@@ -56,6 +56,14 @@ macro_rules! log {
             );
         };
     }};
+}
+
+#[macro_export]
+macro_rules! trace {
+    ($s:expr) => { $crate::log!("T", 4, $s); };
+    ($fs:expr, $($arg:tt)*) => {
+        $crate::log!("T", 4, $fs, $($arg)*)
+    };
 }
 
 #[macro_export]

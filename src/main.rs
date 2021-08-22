@@ -8,7 +8,10 @@
 #![feature(format_args_nl)]
 
 use crate::{
-    arch::arch_impl::exception::current_privilege_level,
+    arch::{
+        aarch64::cpu::exception::get_mask_state,
+        arch_impl::exception::current_privilege_level,
+    },
     common::{
         driver::DriverManager,
         memory::mmu::MemoryManagementUnit,
@@ -50,16 +53,20 @@ unsafe fn kernel_main() -> ! {
 
     let privilege_level = current_privilege_level();
     info!("Current privilege level: {}", privilege_level);
+    info!("Exception Status: {}", get_mask_state());
 
     let mut buf = [0u8; 512];
     let mut idx = 0;
 
+    print!("> ");
     loop {
         let c = statics::UART_DRIVER.read_char() as u8;
         buf[idx] = c;
         idx += 1;
         if c == b'\n' {
-            info!("\n{}", core::str::from_utf8_unchecked(&buf[0..=idx]));
+            print!("\n");
+            info!("{}", core::str::from_utf8_unchecked(&buf[0..=idx]));
+            print!("> ");
             idx = 0;
         } else {
             print!("{}", c as char);

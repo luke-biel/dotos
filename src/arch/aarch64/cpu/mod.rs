@@ -9,6 +9,7 @@ use crate::{
     },
 };
 
+pub mod exception;
 pub mod instructions;
 pub mod registers;
 
