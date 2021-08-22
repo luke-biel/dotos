@@ -8,10 +8,10 @@ use tock_registers::{
 };
 
 use crate::{
-    arch::arch_impl::statics::TIMER,
     bsp::device_driver::WrappedPointer,
     common::{
         driver::Driver,
+        statics::TIMER,
         sync::{Mutex, NullLock},
         time_manager::TimeManager,
     },

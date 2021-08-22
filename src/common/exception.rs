@@ -1,5 +1,4 @@
-use core::fmt;
-use core::fmt::Formatter;
+use core::{fmt, fmt::Formatter};
 
 #[derive(PartialEq)]
 pub enum PrivilegeLevel {
@@ -16,6 +15,7 @@ impl fmt::Display for PrivilegeLevel {
             PrivilegeLevel::Kernel => "kernel",
             PrivilegeLevel::Hypervisor => "hypervisor",
             PrivilegeLevel::Firmware => "unknown",
-        }.fmt(f)
+        }
+        .fmt(f)
     }
 }

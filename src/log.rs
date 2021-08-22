@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{bsp::device::statics::CONSOLE, common::serial_console::Write};
+use crate::common::{serial_console::Write, statics::CONSOLE};
 
 pub fn _print(args: fmt::Arguments) {
     CONSOLE.write_fmt(args).expect("default console write_fmt")
@@ -62,7 +62,7 @@ macro_rules! log {
 macro_rules! debug {
     ($s:expr) => { $crate::log!("D", 3, $s); };
     ($fs:expr, $($arg:tt)*) => {
-        $crate::log!("D", 3, $fs, $($arg)*);
+        $crate::log!("D", 3, $fs, $($arg)*)
     };
 }
 
@@ -70,7 +70,7 @@ macro_rules! debug {
 macro_rules! info {
     ($s:expr) => { $crate::log!("I", 2, $s); };
     ($fs:expr, $($arg:tt)*) => {
-        $crate::log!("I", 2, $fs, $($arg)*);
+        $crate::log!("I", 2, $fs, $($arg)*)
     };
 }
 
@@ -78,7 +78,7 @@ macro_rules! info {
 macro_rules! warn {
     ($s:expr) => { $crate::log!("W", 1, $s); };
     ($fs:expr, $($arg:tt)*) => {
-        $crate::log!("W", 1, $fs, $($arg)*);
+        $crate::log!("W", 1, $fs, $($arg)*)
     };
 }
 
@@ -86,6 +86,6 @@ macro_rules! warn {
 macro_rules! error {
     ($s:expr) => { $crate::log!("E", 0, $s); };
     ($fs:expr, $($arg:tt)*) => {
-        $crate::log!("E", 0, $fs, $($arg)*);
+        $crate::log!("E", 0, $fs, $($arg)*)
     };
 }

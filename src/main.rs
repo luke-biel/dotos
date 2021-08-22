@@ -8,14 +8,14 @@
 #![feature(format_args_nl)]
 
 use crate::{
-    arch::arch_impl::cpu::instructions::wfe,
-    bsp::device::statics,
-    common::{driver::DriverManager, memory::mmu::MemoryManagementUnit},
+    arch::arch_impl::exception::current_privilege_level,
+    common::{
+        driver::DriverManager,
+        memory::mmu::MemoryManagementUnit,
+        serial_console::Read,
+        statics,
+    },
 };
-use crate::common::statics::{BSP_DRIVER_MANAGER, UART_DRIVER};
-use crate::arch::arch_impl::cpu::registers::current_el;
-use crate::arch::arch_impl::exception::current_privilege_level;
-use crate::common::serial_console::Read;
 
 crate mod arch;
 mod bsp;
@@ -24,9 +24,7 @@ mod log;
 mod panic;
 
 unsafe fn kernel_init() -> ! {
-    arch::arch_impl::statics::MMU
-        .enable_mmu_and_caching()
-        .expect("mmu init");
+    statics::MMU.enable_mmu_and_caching().expect("mmu init");
 
     statics::BSP_DRIVER_MANAGER.init().expect("driver init");
     statics::BSP_DRIVER_MANAGER
@@ -46,7 +44,7 @@ unsafe fn kernel_main() -> ! {
     info!("> git head: {}", env!("GIT_HASH"));
 
     info!("> drivers loaded:");
-    for (i, driver) in BSP_DRIVER_MANAGER.drivers.iter().enumerate() {
+    for (i, driver) in statics::BSP_DRIVER_MANAGER.drivers.iter().enumerate() {
         info!("> {}: {}", i, driver.compat())
     }
 
@@ -57,7 +55,7 @@ unsafe fn kernel_main() -> ! {
     let mut idx = 0;
 
     loop {
-        let c = UART_DRIVER.read_char() as u8;
+        let c = statics::UART_DRIVER.read_char() as u8;
         buf[idx] = c;
         idx += 1;
         if c == b'\n' {

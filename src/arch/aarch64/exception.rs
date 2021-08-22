@@ -1,6 +1,7 @@
-use crate::common::exception::PrivilegeLevel;
-use crate::arch::arch_impl::cpu::registers::current_el;
-use crate::arch::aarch64::cpu::registers::ExceptionLevel;
+use crate::{
+    arch::{aarch64::cpu::registers::ExceptionLevel, arch_impl::cpu::registers::current_el},
+    common::exception::PrivilegeLevel,
+};
 
 pub fn current_privilege_level() -> PrivilegeLevel {
     let el = unsafe { current_el() };
