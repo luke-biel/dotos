@@ -26,7 +26,7 @@ unsafe extern "C" fn current_elx_sync(e: &mut ExceptionContext) {
     let far_el1: u64;
     asm!("mrs {}, far_el1", out(reg) far_el1, options(nostack, nomem));
 
-    if far_el1 == 1_u64 << 33 {
+    if far_el1 == 1024 * 1024 * 1024 * 8 {
         e.elr_el1 += 4;
 
         eret()
