@@ -55,14 +55,16 @@ unsafe fn kernel_main() -> ! {
     }
 
     let privilege_level = current_privilege_level();
-    info!("Current privilege level: {}", privilege_level);
-    info!("Exception Status: {}", get_mask_state());
+    info!("current privilege level: {}", privilege_level);
+    info!("exception Status: {}", get_mask_state());
 
+    // TEMP
     let big_addr: u64 = 1024 * 1024 * 1024 * 8;
     unsafe {
         core::ptr::read_volatile(big_addr as *mut u64);
     }
     info!("Recovery from exception successful");
+    // TEMP end
 
     let mut buf = [0u8; 512];
     let mut idx = 0;
