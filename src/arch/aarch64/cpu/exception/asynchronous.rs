@@ -4,13 +4,13 @@ use core::{
 };
 
 bitflags::bitflags! {
-    #[repr(C)]
-    struct Daif: u64 {
-        const DEBUG = 1 << 9;
-        const SERROR = 1 << 8;
-        const IRQ = 1 << 7;
-        const FIQ = 1 << 6;
-    }
+#[repr(C)]
+struct Daif: u64 {
+    const DEBUG = 1 << 9;
+    const SERROR = 1 << 8;
+    const IRQ = 1 << 7;
+    const FIQ = 1 << 6;
+}
 }
 
 pub enum Mask {
@@ -34,7 +34,7 @@ impl Display for Mask {
             Mask::Masked => "masked",
             Mask::Unmasked => "unmasked",
         }
-        .fmt(f)
+            .fmt(f)
     }
 }
 

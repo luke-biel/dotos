@@ -6,11 +6,14 @@
 #![feature(const_panic)]
 #![feature(panic_info_message)]
 #![feature(format_args_nl)]
+#![feature(global_asm)]
 
 use crate::{
     arch::{
-        aarch64::cpu::exception::get_mask_state,
-        arch_impl::exception::current_privilege_level,
+        arch_impl::{
+            exception::current_privilege_level,
+            cpu::exception::asynchronous::get_mask_state
+        },
     },
     common::{
         driver::DriverManager,
@@ -65,7 +68,7 @@ unsafe fn kernel_main() -> ! {
         idx += 1;
         if c == b'\n' {
             print!("\n");
-            info!("{}", core::str::from_utf8_unchecked(&buf[0..=idx]));
+            print!("(U) {}", core::str::from_utf8_unchecked(&buf[0..=idx]));
             print!("> ");
             idx = 0;
         } else {

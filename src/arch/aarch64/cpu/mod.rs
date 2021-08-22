@@ -58,6 +58,7 @@ unsafe fn enter_el1() -> ! {
     eret()
 }
 
+#[no_mangle]
 pub unsafe fn park() -> ! {
     loop {
         wfe()
