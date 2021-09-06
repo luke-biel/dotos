@@ -1,5 +1,7 @@
 use core::{fmt, fmt::Formatter};
 
+pub mod asynchronous;
+
 #[derive(PartialEq)]
 pub enum PrivilegeLevel {
     User,

@@ -7,6 +7,7 @@ const NS_IN_S: u64 = 1_000_000_000;
 pub struct GenericTimer;
 
 impl GenericTimer {
+    #[inline(always)]
     fn cntpct_el0(&self) -> u64 {
         let res: u64;
         unsafe {
@@ -16,6 +17,7 @@ impl GenericTimer {
         res
     }
 
+    #[inline(always)]
     fn cntfrq_el0(&self) -> u64 {
         let cntfrq_el0: u64;
         unsafe { asm!("mrs {}, cntfrq_el0", out(reg) cntfrq_el0, options(nostack, nomem)) };

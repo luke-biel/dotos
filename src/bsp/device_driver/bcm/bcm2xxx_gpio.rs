@@ -12,7 +12,7 @@ use crate::{
     common::{
         driver::Driver,
         statics::TIMER,
-        sync::{Mutex, NullLock},
+        sync::{IRQSafeNullLock, Mutex},
         time_manager::TimeManager,
     },
 };
@@ -85,7 +85,7 @@ pub struct GpioInner {
 }
 
 pub struct Gpio {
-    inner: NullLock<GpioInner>,
+    inner: IRQSafeNullLock<GpioInner>,
 }
 
 impl GpioInner {
@@ -122,7 +122,7 @@ impl GpioInner {
 impl Gpio {
     pub const unsafe fn new(start: usize) -> Self {
         Self {
-            inner: NullLock::new(GpioInner::new(start)),
+            inner: IRQSafeNullLock::new(GpioInner::new(start)),
         }
     }
 

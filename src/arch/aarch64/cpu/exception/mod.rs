@@ -1,14 +1,15 @@
 use core::{cell::UnsafeCell, fmt, fmt::Formatter};
 
+use crate::{
+    arch::aarch64::cpu::registers::{current_el, ExceptionLevel},
+    common::exception::PrivilegeLevel,
+};
+
 pub mod asynchronous;
 mod handlers;
 
 // TODO: look whether I can replace this with rust code
 global_asm!(include_str!("exception.s"));
-
-extern "Rust" {
-    static __exv_start: UnsafeCell<()>;
-}
 
 #[derive(Debug)]
 #[repr(C)]
@@ -31,8 +32,23 @@ impl fmt::Display for ExceptionContext {
     }
 }
 
+#[inline(always)]
 pub unsafe fn init_exception_handling() {
-    let vbar_el1: u64 = __exv_start.get() as u64;
-    asm!("msr vbar_el1, {}", in(reg) vbar_el1, options(nostack, nomem));
+    extern "Rust" {
+        static __exception_vector_addr: UnsafeCell<()>;
+    }
+
+    let vbar_el1: u64 = __exception_vector_addr.get() as u64;
+    asm!("msr vbar_el1, {}", in(reg) vbar_el1);
     asm!("isb sy");
+}
+
+pub fn current_privilege_level() -> PrivilegeLevel {
+    let el = unsafe { current_el() };
+    match el {
+        ExceptionLevel::EL0 => PrivilegeLevel::User,
+        ExceptionLevel::EL1 => PrivilegeLevel::Kernel,
+        ExceptionLevel::EL2 => PrivilegeLevel::Hypervisor,
+        ExceptionLevel::EL3 => PrivilegeLevel::Firmware,
+    }
 }

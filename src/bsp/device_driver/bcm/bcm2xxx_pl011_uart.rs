@@ -1,4 +1,7 @@
-use core::{fmt, fmt::Arguments};
+use core::{
+    fmt,
+    fmt::{Arguments, Write},
+};
 
 use tock_registers::{
     interfaces::{Readable, Writeable},
@@ -9,11 +12,16 @@ use tock_registers::{
 
 use crate::{
     arch::arch_impl::cpu::instructions::nop,
-    bsp::device_driver::WrappedPointer,
+    bsp::device_driver::{
+        bcm::bcm2xxx_interrupt_controller::{IRQNumber, PeripheralIRQ},
+        WrappedPointer,
+    },
     common::{
         driver::Driver,
+        exception::asynchronous::{IRQDescriptor, IRQHandler, IRQManager},
         serial_console,
-        sync::{Mutex, NullLock},
+        statics,
+        sync::{IRQSafeNullLock, Mutex},
     },
 };
 
@@ -36,7 +44,6 @@ register_bitfields! {
     ],
 
     LCR_H [
-        #[allow(clippy::enum_variant_names)]
         WLEN OFFSET(5) NUMBITS(2) [
             FiveBit = 0b00,
             SixBit = 0b01,
@@ -55,16 +62,40 @@ register_bitfields! {
             Disabled = 0,
             Enabled = 1
         ],
-
         TXE OFFSET(8) NUMBITS(1) [
             Disabled = 0,
             Enabled = 1
         ],
-
         UARTEN OFFSET(0) NUMBITS(1) [
             Disabled = 0,
             Enabled = 1
         ]
+    ],
+
+    IFLS [
+        RXIFLSEL OFFSET(3) NUMBITS(5) [
+            OneEigth = 0b000,
+            OneQuarter = 0b001,
+            OneHalf = 0b010,
+            ThreeQuarters = 0b011,
+            SevenEights = 0b100
+        ]
+    ],
+
+    IMSC [
+        RTIM OFFSET(6) NUMBITS(1) [
+            Disabled = 0,
+            Enabled = 1
+        ],
+        RXIM OFFSET(4) NUMBITS(1) [
+            Disabled = 0,
+            Enabled = 1
+        ]
+    ],
+
+    MIS [
+        RTMIS OFFSET(6) NUMBITS(1) [],
+        RXMIS OFFSET(4) NUMBITS(1) []
     ],
 
     ICR [
@@ -83,7 +114,10 @@ register_structs! {
         (0x28 => fbrd: WriteOnly<u32, FBRD::Register>),
         (0x2c => lcr_h: WriteOnly<u32, LCR_H::Register>),
         (0x30 => cr: WriteOnly<u32, CR::Register>),
-        (0x34 => _reserved3),
+        (0x34 => ifls: ReadWrite<u32, IFLS::Register>),
+        (0x38 => imsc: ReadWrite<u32, IMSC::Register>),
+        (0x3c => _reserved3),
+        (0x40 => mis: ReadOnly<u32, MIS::Register>),
         (0x44 => icr: WriteOnly<u32, ICR::Register>),
         (0x48 => @END),
     }
@@ -94,7 +128,7 @@ pub struct PL011UartInner {
 }
 
 pub struct PL011Uart {
-    inner: NullLock<PL011UartInner>,
+    inner: IRQSafeNullLock<PL011UartInner>,
 }
 
 impl PL011UartInner {
@@ -116,6 +150,11 @@ impl PL011UartInner {
         self.registers
             .lcr_h
             .write(LCR_H::FEN::FifosEnabled + LCR_H::WLEN::EightBit);
+
+        self.registers.ifls.write(IFLS::RXIFLSEL::OneEigth);
+        self.registers
+            .imsc
+            .write(IMSC::RXIM::Enabled + IMSC::RTIM::Enabled);
 
         self.registers
             .cr
@@ -182,9 +221,11 @@ impl fmt::Write for PL011UartInner {
 }
 
 impl PL011Uart {
+    const IRQ_NUMBER: IRQNumber = IRQNumber::Peripheral(PeripheralIRQ::UARTInt);
+
     pub const unsafe fn new(start: usize) -> Self {
         Self {
-            inner: NullLock::new(PL011UartInner::new(start)),
+            inner: IRQSafeNullLock::new(PL011UartInner::new(start)),
         }
     }
 }
@@ -196,6 +237,19 @@ impl Driver for PL011Uart {
 
     unsafe fn init(&self) -> Result<(), &'static str> {
         self.inner.map_locked(|inner| inner.init());
+
+        Ok(())
+    }
+
+    fn register_irq_handler(&'static self) -> Result<(), &'static str> {
+        statics::INTERRUPT_CONTROLLER.register_handler(
+            Self::IRQ_NUMBER,
+            IRQDescriptor {
+                name: self.compat(),
+                handler: self,
+            },
+        )?;
+        statics::INTERRUPT_CONTROLLER.enable(Self::IRQ_NUMBER);
 
         Ok(())
     }
@@ -228,5 +282,33 @@ impl serial_console::Read for PL011Uart {
             .map_locked(|inner| inner.read_char(false))
             .is_some()
         {}
+    }
+}
+
+impl fmt::Write for PL011Uart {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        for c in s.chars() {
+            serial_console::Write::write_char(self, c);
+        }
+
+        Ok(())
+    }
+}
+
+impl IRQHandler for PL011Uart {
+    fn handle(&self) -> Result<(), &'static str> {
+        self.inner.map_locked(|inner| {
+            let pending = inner.registers.mis.extract();
+
+            inner.registers.icr.write(ICR::ALL::CLEAR);
+
+            if pending.matches_any(MIS::RXMIS::SET + MIS::RTMIS::SET) {
+                while let Some(c) = inner.read_char(false) {
+                    inner.write_char(c)
+                }
+            }
+        });
+
+        Ok(())
     }
 }

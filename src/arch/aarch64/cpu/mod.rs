@@ -30,11 +30,13 @@ unsafe fn _start() -> ! {
     prepare_kernel();
 }
 
+#[inline(always)]
 unsafe fn prepare_kernel() -> ! {
     enter_el1()
 }
 
 /// Method prepares register values for el2 -> el1 change and then entries `init` function
+#[inline(always)]
 unsafe fn enter_el1() -> ! {
     // TODO: Create facade around these registers
     let cnthctl_el2 = 0b11_u64;

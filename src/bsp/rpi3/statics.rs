@@ -7,14 +7,20 @@ use crate::bsp::{
 
 pub static GPIO_DRIVER: Gpio = unsafe { Gpio::new(mmio::GPIO_START) };
 pub static UART_DRIVER: PL011Uart = unsafe { PL011Uart::new(mmio::UART_START) };
+pub static INTERRUPT_CONTROLLER: InterruptController =
+    unsafe { InterruptController::new(mmio::LOCAL_IC_START, mmio::PERIPHERAL_IC_START) };
 
-pub static BSP_DRIVER_MANAGER: BSPDriverManager<2> = BSPDriverManager {
-    drivers: [&GPIO_DRIVER, &UART_DRIVER],
+pub static BSP_DRIVER_MANAGER: BSPDriverManager<3> = BSPDriverManager {
+    drivers: [&GPIO_DRIVER, &UART_DRIVER, &INTERRUPT_CONTROLLER],
 };
 
 pub use self::UART_DRIVER as CONSOLE;
 pub use super::memory::mmu::KERNEL_VIRTUAL_LAYOUT;
-use crate::bsp::device_driver::bcm::{bcm2xxx_gpio::GpioInner, bcm2xxx_pl011_uart::PL011UartInner};
+use crate::bsp::device_driver::bcm::{
+    bcm2xxx_gpio::GpioInner,
+    bcm2xxx_interrupt_controller::InterruptController,
+    bcm2xxx_pl011_uart::PL011UartInner,
+};
 
 pub const LOG_LEVEL: usize = 4;
 

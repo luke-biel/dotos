@@ -34,9 +34,11 @@
     b 1b
 .endm
 
+.section .text
+
 .align 11
 
-__exv_start:
+__exception_vector_addr:
 .org 0x000
     HANDLE_WITH_CONTEXT current_el0_sync
 .org 0x080
@@ -104,3 +106,5 @@ __ex_restore:
 
 .size __ex_restore, . - __ex_restore
 .type __ex_restore, function
+
+.global __exception_vector_addr

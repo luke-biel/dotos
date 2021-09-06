@@ -7,16 +7,27 @@
 #![feature(panic_info_message)]
 #![feature(format_args_nl)]
 #![feature(global_asm)]
+#![feature(const_trait_impl)]
+#![feature(const_default_impls)]
+#![feature(min_specialization)]
+
+use core::ptr::read_volatile;
+
+use arch::aarch64::cpu::exception::current_privilege_level;
 
 use crate::{
-    arch::arch_impl::{
-        cpu::exception::{asynchronous::get_mask_state, init_exception_handling},
-        exception::current_privilege_level,
+    arch::{
+        aarch64::cpu::exception::asynchronous::local_irq,
+        arch_impl::cpu::{
+            exception::{asynchronous::get_mask_state, init_exception_handling},
+            park,
+        },
     },
     common::{
         driver::DriverManager,
         memory::mmu::MemoryManagementUnit,
         serial_console::Read,
+        state::KernelState,
         statics,
     },
 };
@@ -36,51 +47,39 @@ unsafe fn kernel_init() -> ! {
     statics::BSP_DRIVER_MANAGER
         .late_init()
         .expect("driver late_init");
+    statics::BSP_DRIVER_MANAGER
+        .register_irq_handlers()
+        .expect("driver register_irq_handler");
+
+    local_irq(false);
+
+    statics::STATE_MANAGER.transition(KernelState::Init, KernelState::SingleCoreRun);
 
     kernel_main()
 }
 
 unsafe fn kernel_main() -> ! {
     info!(
-        "> {} - v{}",
+        "{} - v{}",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION")
     );
-    info!("> build time: {}", env!("BUILD_DATE"));
-    info!("> git head: {}", env!("GIT_HASH"));
+    info!("build time: {}", env!("BUILD_DATE"));
+    info!("git head: {}", env!("GIT_HASH"));
 
-    info!("> drivers loaded:");
-    for (i, driver) in statics::BSP_DRIVER_MANAGER.drivers.iter().enumerate() {
-        info!("> {}: {}", i, driver.compat())
-    }
+    statics::BSP_DRIVER_MANAGER.print_status();
+    statics::INTERRUPT_CONTROLLER.print_status();
 
-    let privilege_level = current_privilege_level();
-    info!("current privilege level: {}", privilege_level);
-    info!("exception Status: {}", get_mask_state());
+    // // TEMP
+    // let big_addr: u64 = 1024 * 1024 * 1024 * 8;
+    // unsafe {
+    //     core::ptr::read_volatile(big_addr as *mut u64);
+    // }
+    // info!("Recovery from exception successful");
+    // // TEMP end
 
-    // TEMP
-    let big_addr: u64 = 1024 * 1024 * 1024 * 8;
-    unsafe {
-        core::ptr::read_volatile(big_addr as *mut u64);
-    }
-    info!("Recovery from exception successful");
-    // TEMP end
+    info!("current privilege level: {}", current_privilege_level());
+    info!("exception status: {}", get_mask_state());
 
-    let mut buf = [0u8; 512];
-    let mut idx = 0;
-
-    print!("> ");
-    loop {
-        let c = statics::UART_DRIVER.read_char() as u8;
-        buf[idx] = c;
-        idx += 1;
-        if c == b'\n' {
-            print!("\n");
-            print!("(U) {}", core::str::from_utf8_unchecked(&buf[0..=idx]));
-            print!("> ");
-            idx = 0;
-        } else {
-            print!("{}", c as char);
-        }
-    }
+    park()
 }
