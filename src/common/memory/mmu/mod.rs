@@ -1,4 +1,25 @@
-use core::ops::RangeInclusive;
+use core::{marker::PhantomData, ops::RangeInclusive};
+
+use descriptors::{
+    AccessPermissions,
+    Attributes,
+    Execute,
+    MemoryAttributes,
+    Translation,
+    TranslationDescriptor,
+};
+
+use crate::{
+    bsp::device::memory::mmu::KernelGranule,
+    common::{
+        memory::{mmu::translation_table::TranslationTable, Address, AddressType, Physical},
+        sync::ReadWriteLock,
+    },
+    statics,
+};
+
+pub mod descriptors;
+pub mod translation_table;
 
 pub trait MemoryManagementUnit {
     unsafe fn enable_mmu_and_caching(&self) -> Result<(), &'static str>;
@@ -7,44 +28,6 @@ pub trait MemoryManagementUnit {
 
 pub struct TranslationGranule<const SIZE: usize>;
 pub struct AddressSpace<const SIZE: usize>;
-
-#[derive(Copy, Clone, Debug)]
-pub enum Translation {
-    Id,
-    Offset(usize),
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum MemoryAttributes {
-    CacheableDRAM,
-    Device,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum AccessPermissions {
-    RX,
-    RW,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum Execute {
-    Always,
-    Never,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct Attributes {
-    pub memory: MemoryAttributes,
-    pub access: AccessPermissions,
-    pub execute: Execute,
-}
-
-pub struct TranslationDescriptor {
-    pub name: &'static str,
-    pub vrange: fn() -> RangeInclusive<usize>,
-    pub prange_translation: Translation,
-    pub attributes: Attributes,
-}
 
 pub struct KernelVirtualLayout<const SIZE: usize> {
     max_vaddr: usize,
@@ -101,12 +84,13 @@ impl<const SIZE: usize> KernelVirtualLayout<SIZE> {
     }
 }
 
-impl Default for Attributes {
-    fn default() -> Self {
-        Self {
-            memory: MemoryAttributes::CacheableDRAM,
-            access: AccessPermissions::RW,
-            execute: Execute::Never,
-        }
-    }
+pub fn map_kernel_binary() -> Result<Address<Physical>, &'static str> {
+    let kernel_base_addr = statics::KERNEL_TABLES.map_write(|tables| {
+        tables.init();
+        tables.base_addr()
+    });
+
+    bsp::map_kernel_binary()?;
+
+    Ok(kernel_base_addr)
 }

@@ -3,7 +3,7 @@ use crate::{
         instructions::{eret, wfe},
         registers::{core_id_el1, current_el, ExceptionLevel},
     },
-    bsp::rpi3::{
+    bsp::device::{
         cpu::BOOT_CORE_ID,
         memory::{boot_core_stack_ende, bss},
     },

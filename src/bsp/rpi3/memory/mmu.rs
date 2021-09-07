@@ -1,20 +1,34 @@
 use core::ops::RangeInclusive;
 
 use crate::{
+    arch::arch_impl::memory::mmu::translation_table::FixedSizeTranslationTable,
     bsp::{device::memory::map::END, rpi3::memory::map::mmio},
-    common::memory::mmu::{
-        AccessPermissions,
-        AddressSpace,
-        Attributes,
-        Execute,
-        KernelVirtualLayout,
-        MemoryAttributes,
-        Translation,
-        TranslationDescriptor,
+    common::{
+        align_down,
+        memory::{
+            mmu::{
+                descriptors::{
+                    AccessPermissions,
+                    Attributes,
+                    Execute,
+                    MemoryAttributes,
+                    Page,
+                    Translation,
+                    TranslationDescriptor,
+                },
+                AddressSpace,
+                AssociatedTranslationTable,
+                KernelVirtualLayout,
+                TranslationGranule,
+            },
+            Physical,
+        },
+        sync::InitStateLock,
     },
 };
 
-pub type KernelAddrSpace = AddressSpace<{ END + 1 }>;
+pub type KernelGranule = TranslationGranule<{ 64 * 1024 }>;
+pub type KernelAddrSpace = AddressSpace<{ 8 * 1024 * 1024 * 1024 }>;
 
 const NUM_MEM_RANGES: usize = 3;
 
@@ -64,4 +78,8 @@ fn remapped_mmio_range_inclusive() -> RangeInclusive<usize> {
 
 fn mmio_range_inclusive() -> RangeInclusive<usize> {
     RangeInclusive::new(mmio::START, mmio::END)
+}
+
+pub fn add_space_end_page() -> *const Page<Physical> {
+    align_down::<KernelGranule::SIZE>(super::map::END) as *const _
 }

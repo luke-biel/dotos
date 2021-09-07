@@ -3,7 +3,10 @@ use core::intrinsics::unlikely;
 use crate::{
     arch::arch_impl::memory::mmu::translation_table::KernelTranslationTable,
     bsp::device::memory::mmu::KernelAddrSpace,
-    common::memory::mmu::{AddressSpace, MemoryManagementUnit, TranslationGranule},
+    common::{
+        memory::mmu::{AddressSpace, MemoryManagementUnit, TranslationGranule},
+        sync::{InitStateLock, ReadWriteLock},
+    },
 };
 
 pub mod mair;
@@ -14,7 +17,8 @@ pub struct Aarch64MemoryManagementUnit;
 pub type Granule512MB = TranslationGranule<{ 512 * 1024 * 1024 }>;
 pub type Granule64KB = TranslationGranule<{ 64 * 1024 }>;
 
-static mut KERNEL_TABLES: KernelTranslationTable = KernelTranslationTable::new();
+pub static KERNEL_TABLES: InitStateLock<KernelTranslationTable> =
+    InitStateLock::new(KernelTranslationTable::new());
 
 impl<const SIZE: usize> AddressSpace<SIZE> {
     pub const fn arch_address_space_size_sanity_checks() {
@@ -64,7 +68,7 @@ impl MemoryManagementUnit for Aarch64MemoryManagementUnit {
             .populate()
             .map_err(|_| "failed to populate translation tables")?;
 
-        let baddr: u64 = KERNEL_TABLES.base_paddr() >> 1 << 1;
+        let baddr: u64 = KERNEL_TABLES.map_read(|table| table.base_paddr()) >> 1 << 1;
         asm!("msr ttbr0_el1, {}", in(reg) baddr, options(nostack, nomem));
 
         self.configure_translation_control();

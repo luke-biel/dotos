@@ -1,14 +1,21 @@
-pub const END: usize = 0xffff_ffff;
-pub const GPIO_OFFSET: usize = 0x0020_0000;
-pub const UART_OFFSET: usize = 0x0020_1000;
+use crate::common::memory::{Address, Physical};
+
+pub const END: Address<Physical> = mmio::END;
 
 pub mod mmio {
-    use crate::bsp::rpi3::memory::map::{GPIO_OFFSET, UART_OFFSET};
+    use crate::common::memory::{Address, Physical};
 
-    pub const START: usize = 0x3f00_0000;
-    pub const PERIPHERAL_IC_START: usize = START + 0x0000_B200;
-    pub const GPIO_START: usize = START + GPIO_OFFSET;
-    pub const UART_START: usize = START + UART_OFFSET;
-    pub const LOCAL_IC_START: usize = 0x4000_0000;
-    pub const END: usize = 0x4000_ffff;
+    pub const PERIPHERAL_IC_START: Address<Physical> = Address::new(0x3F00_B200);
+    pub const PERIPHERAL_IC_SIZE: usize = 0x24;
+
+    pub const GPIO_START: Address<Physical> = Address::new(0x3F20_0000);
+    pub const GPIO_SIZE: usize = 0xA0;
+
+    pub const UART_START: Address<Physical> = Address::new(0x3F20_1000);
+    pub const UART_SIZE: usize = 0x48;
+
+    pub const LOCAL_IC_START: Address<Physical> = Address::new(0x4000_0000);
+    pub const LOCAL_IC_SIZE: usize = 0x100;
+
+    pub const END: Address<Physical> = Address::new(0x4001_0000);
 }

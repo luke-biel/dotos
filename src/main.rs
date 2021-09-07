@@ -10,6 +10,7 @@
 #![feature(const_trait_impl)]
 #![feature(const_default_impls)]
 #![feature(min_specialization)]
+#![feature(const_fn_trait_bound)]
 
 use core::ptr::read_volatile;
 
@@ -17,7 +18,7 @@ use arch::aarch64::cpu::exception::current_privilege_level;
 
 use crate::{
     arch::{
-        aarch64::cpu::exception::asynchronous::local_irq,
+        aarch64::cpu::exception::asynchronous::local_irq_set_mask,
         arch_impl::cpu::{
             exception::{asynchronous::get_mask_state, init_exception_handling},
             park,
@@ -25,7 +26,7 @@ use crate::{
     },
     common::{
         driver::DriverManager,
-        memory::mmu::MemoryManagementUnit,
+        memory::mmu::{map_kernel_binary, MemoryManagementUnit},
         serial_console::Read,
         state::KernelState,
         statics,
@@ -40,6 +41,7 @@ mod panic;
 
 unsafe fn kernel_init() -> ! {
     init_exception_handling();
+    let kernel_addr = map_kernel_binary().expect("map kernel binary");
 
     statics::MMU.enable_mmu_and_caching().expect("mmu init");
 
@@ -51,7 +53,7 @@ unsafe fn kernel_init() -> ! {
         .register_irq_handlers()
         .expect("driver register_irq_handler");
 
-    local_irq(false);
+    local_irq_set_mask(false);
 
     statics::STATE_MANAGER.transition(KernelState::Init, KernelState::SingleCoreRun);
 

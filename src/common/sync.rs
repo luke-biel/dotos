@@ -23,7 +23,7 @@ pub trait ReadWriteLock {
 }
 
 /// Single threaded synchronization provider.
-/// Don't use on m-t environments or with interrupts turned on.
+/// Don't use on m-t environments
 pub struct IRQSafeNullLock<T: Sized> {
     data: UnsafeCell<T>,
 }
@@ -82,6 +82,7 @@ impl<T> ReadWriteLock for InitStateLock<T> {
         f(data)
     }
 
+    // No additional synchronization required, as this lock allows writes on single core with IRQs masked
     fn map_write<R, F>(&self, f: F) -> R
     where
         F: FnOnce(&mut Self::Data) -> R,
