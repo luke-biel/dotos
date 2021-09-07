@@ -1,44 +1,8 @@
-use core::{
-    cmp::Ordering,
-    convert::Infallible,
-    intrinsics::size_of,
-    iter::{
-        Chain,
-        Cloned,
-        Copied,
-        Cycle,
-        Enumerate,
-        Filter,
-        FilterMap,
-        FlatMap,
-        Flatten,
-        FromIterator,
-        Fuse,
-        Inspect,
-        Intersperse,
-        IntersperseWith,
-        Map,
-        MapWhile,
-        Peekable,
-        Product,
-        Rev,
-        Scan,
-        Skip,
-        SkipWhile,
-        StepBy,
-        Sum,
-        Take,
-        TakeWhile,
-        TrustedRandomAccessNoCoerce,
-        Zip,
-    },
-    marker::PhantomData,
-    ops::{RangeInclusive, Try},
-};
+use core::{intrinsics::size_of, marker::PhantomData, ops::RangeInclusive};
 
 use crate::{
     bsp::device::memory::mmu::KernelGranule,
-    common::memory::{Address, AddressType},
+    common::memory::{Address, AddressType, Physical, Virtual},
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -85,6 +49,8 @@ pub struct Page<A: AddressType> {
     _phantom: PhantomData<A>,
 }
 
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
 pub struct PageSliceDescriptor<A: AddressType> {
     start: Address<A>,
     num_pages: usize,
@@ -109,7 +75,7 @@ impl<A: AddressType> PageSliceDescriptor<A> {
     }
 
     const fn first_page_ptr(&self) -> *const Page<A> {
-        usize::from(&self.start) as *const _
+        self.start.addr() as *const _
     }
 
     pub fn iter(&self) -> PageSliceDescriptorIter<A> {
@@ -126,6 +92,15 @@ impl<A: AddressType> PageSliceDescriptor<A> {
 
     pub fn end_addr(&self) -> Address<A> {
         self.start + self.size()
+    }
+}
+
+impl From<PageSliceDescriptor<Virtual>> for PageSliceDescriptor<Physical> {
+    fn from(desc: PageSliceDescriptor<Virtual>) -> Self {
+        Self {
+            start: Address::new(desc.start.addr()),
+            num_pages: desc.num_pages,
+        }
     }
 }
 
@@ -154,7 +129,7 @@ impl<A: AddressType> Iterator for PageSliceDescriptorIter<A> {
         } else {
             let val = unsafe { self.ptr.read() };
             unsafe {
-                self.ptr += size_of::<Self::Item>();
+                self.ptr = self.ptr.wrapping_add(size_of::<Self::Item>());
             }
             self.remaining -= 1;
             Some(val)

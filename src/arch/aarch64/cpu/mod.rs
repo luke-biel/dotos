@@ -54,7 +54,7 @@ unsafe fn enter_el1() -> ! {
     let init = crate::kernel_init as *const () as u64;
     asm!("msr elr_el2, {}", in(reg) init, options(nostack, nomem));
 
-    let boot_core_stack_ende = boot_core_stack_ende();
+    let boot_core_stack_ende = boot_core_stack_ende().addr();
     asm!("msr sp_el1, {}", in(reg) boot_core_stack_ende, options(nostack, nomem));
 
     eret()

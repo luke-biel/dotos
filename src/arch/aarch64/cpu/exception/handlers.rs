@@ -1,10 +1,9 @@
 use crate::{
-    arch::arch_impl::cpu::{exception::ExceptionContext, instructions::eret},
+    arch::arch_impl::cpu::exception::ExceptionContext,
     common::{
         exception::asynchronous::{IRQContext, IRQManager},
         statics,
     },
-    info,
 };
 
 unsafe fn default_handler(e: &mut ExceptionContext) {

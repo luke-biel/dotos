@@ -11,8 +11,7 @@
 #![feature(const_default_impls)]
 #![feature(min_specialization)]
 #![feature(const_fn_trait_bound)]
-
-use core::ptr::read_volatile;
+#![feature(exact_size_is_empty)]
 
 use arch::aarch64::cpu::exception::current_privilege_level;
 
@@ -27,7 +26,6 @@ use crate::{
     common::{
         driver::DriverManager,
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
-        serial_console::Read,
         state::KernelState,
         statics,
     },
@@ -43,7 +41,9 @@ unsafe fn kernel_init() -> ! {
     init_exception_handling();
     let kernel_addr = map_kernel_binary().expect("map kernel binary");
 
-    statics::MMU.enable_mmu_and_caching().expect("mmu init");
+    statics::MMU
+        .enable_mmu_and_caching(kernel_addr)
+        .expect("mmu init");
 
     statics::BSP_DRIVER_MANAGER.init().expect("driver init");
     statics::BSP_DRIVER_MANAGER

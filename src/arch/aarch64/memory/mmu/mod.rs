@@ -4,8 +4,12 @@ use crate::{
     arch::arch_impl::memory::mmu::translation_table::KernelTranslationTable,
     bsp::device::memory::mmu::KernelAddrSpace,
     common::{
-        memory::mmu::{AddressSpace, MemoryManagementUnit, TranslationGranule},
-        sync::{InitStateLock, ReadWriteLock},
+        memory::{
+            mmu::{AddressSpace, MemoryManagementUnit, TranslationGranule},
+            Address,
+            Physical,
+        },
+        sync::InitStateLock,
     },
 };
 
@@ -51,7 +55,10 @@ impl Aarch64MemoryManagementUnit {
 }
 
 impl MemoryManagementUnit for Aarch64MemoryManagementUnit {
-    unsafe fn enable_mmu_and_caching(&self) -> Result<(), &'static str> {
+    unsafe fn enable_mmu_and_caching(
+        &self,
+        translation_table_base_addr: Address<Physical>,
+    ) -> Result<(), &'static str> {
         if unlikely(self.is_enabled()) {
             return Err("MMU is already enabled");
         }
@@ -64,11 +71,7 @@ impl MemoryManagementUnit for Aarch64MemoryManagementUnit {
 
         self.setup_mair();
 
-        KERNEL_TABLES
-            .populate()
-            .map_err(|_| "failed to populate translation tables")?;
-
-        let baddr: u64 = KERNEL_TABLES.map_read(|table| table.base_paddr()) >> 1 << 1;
+        let baddr: u64 = translation_table_base_addr.addr() as u64;
         asm!("msr ttbr0_el1, {}", in(reg) baddr, options(nostack, nomem));
 
         self.configure_translation_control();

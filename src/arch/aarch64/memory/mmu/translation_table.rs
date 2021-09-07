@@ -8,10 +8,7 @@ use tock_registers::{
 
 use crate::{
     arch::arch_impl::memory::mmu::{mair, Granule512MB, Granule64KB},
-    bsp::{
-        device::memory::{map::END, mmu::KernelAddrSpace},
-        rpi3::statics::KERNEL_VIRTUAL_LAYOUT,
-    },
+    bsp::device::memory::{map::END, mmu::KernelAddrSpace},
     common::memory::{
         mmu::{
             descriptors::{
@@ -276,7 +273,7 @@ impl<const NUM_TABLES: usize> FixedSizeTranslationTable<NUM_TABLES> {
     }
 }
 
-impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<T> {
+impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM_TABLES> {
     fn init(&mut self) {
         if self.is_initialized {
             panic!("Translation tables are already initialized");

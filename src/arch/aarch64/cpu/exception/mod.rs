@@ -22,13 +22,13 @@ pub struct ExceptionContext {
 
 impl fmt::Display for ExceptionContext {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "registers:\n")?;
+        writeln!(f, "registers:")?;
         for i in 0..30 {
-            write!(f, "    x{} = 0x{:0x}\n", i, self.registers[i])?;
+            writeln!(f, "    x{} = 0x{:0x}", i, self.registers[i])?;
         }
-        write!(f, "link_register: 0x{:0x}\n", self.link_register)?;
-        write!(f, "elr_el1: 0x{:0x}\n", self.elr_el1)?;
-        write!(f, "spsr_el1: 0x{:0x}\n", self.spsr_el1)
+        writeln!(f, "link_register: 0x{:0x}", self.link_register)?;
+        writeln!(f, "elr_el1: 0x{:0x}", self.elr_el1)?;
+        writeln!(f, "spsr_el1: 0x{:0x}", self.spsr_el1)
     }
 }
 

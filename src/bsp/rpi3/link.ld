@@ -28,6 +28,7 @@ SECTIONS
     . = ALIGN(64K);
     __rx_ende = .;
 
+    __rw_start = .;
     .data : { *(.data*) } :segment_rw
 
     .bss : ALIGN(16)
@@ -37,4 +38,13 @@ SECTIONS
         . = ALIGN(16);
         __bss_ende = .;
     } :NONE
+    __rw_ende = .;
+
+    __boot_core_stack_guard_page_start = .;
+    . += 64K;
+    __boot_core_stack_guard_page_ende = .;
+
+    __boot_core_stack_start = .;
+    . += 512K;
+    __boot_core_stack_ende = .;
 }

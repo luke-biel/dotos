@@ -1,8 +1,12 @@
-use core::ops::RangeInclusive;
-
 use crate::{
-    arch::arch_impl::memory::mmu::translation_table::FixedSizeTranslationTable,
-    bsp::{device::memory::map::END, rpi3::memory::map::mmio},
+    bsp::device::memory::{
+        boot_core_stack_size,
+        boot_core_stack_start,
+        rw_size,
+        rw_start,
+        rx_size,
+        rx_start,
+    },
     common::{
         align_down,
         memory::{
@@ -13,17 +17,15 @@ use crate::{
                     Execute,
                     MemoryAttributes,
                     Page,
-                    Translation,
-                    TranslationDescriptor,
+                    PageSliceDescriptor,
                 },
+                map_kernel_pages_at,
                 AddressSpace,
-                AssociatedTranslationTable,
-                KernelVirtualLayout,
                 TranslationGranule,
             },
             Physical,
+            Virtual,
         },
-        sync::InitStateLock,
     },
 };
 
@@ -32,54 +34,75 @@ pub type KernelAddrSpace = AddressSpace<{ 8 * 1024 * 1024 * 1024 }>;
 
 const NUM_MEM_RANGES: usize = 3;
 
-pub static KERNEL_VIRTUAL_LAYOUT: KernelVirtualLayout<NUM_MEM_RANGES> = KernelVirtualLayout::new(
-    END,
-    [
-        TranslationDescriptor {
-            name: "Kernel code and RO data",
-            vrange: rx_range_inclusive,
-            prange_translation: Translation::Id,
-            attributes: Attributes {
-                memory: MemoryAttributes::CacheableDRAM,
-                access: AccessPermissions::RX,
-                execute: Execute::Always,
-            },
-        },
-        TranslationDescriptor {
-            name: "Remapped Device MMIO",
-            vrange: remapped_mmio_range_inclusive,
-            prange_translation: Translation::Offset(mmio::START + 0x20_0000),
-            attributes: Attributes {
-                memory: MemoryAttributes::Device,
-                access: AccessPermissions::RW,
-                execute: Execute::Never,
-            },
-        },
-        TranslationDescriptor {
-            name: "Device MMIO",
-            vrange: mmio_range_inclusive,
-            prange_translation: Translation::Id,
-            attributes: Attributes {
-                memory: MemoryAttributes::Device,
-                access: AccessPermissions::RW,
-                execute: Execute::Never,
-            },
-        },
-    ],
-);
+const fn size_to_num_pages(size: usize) -> usize {
+    assert!(size > 0);
+    assert!(size % KernelGranule::SIZE == 0);
 
-fn rx_range_inclusive() -> RangeInclusive<usize> {
-    RangeInclusive::new(super::rx_start(), super::rx_ende() - 1)
+    size >> KernelGranule::SHIFT
 }
 
-fn remapped_mmio_range_inclusive() -> RangeInclusive<usize> {
-    RangeInclusive::new(0x1FFF_0000, 0x1FFF_FFFF)
+fn rx_vpage_desc() -> PageSliceDescriptor<Virtual> {
+    PageSliceDescriptor::from_addr(rx_start(), size_to_num_pages(rx_size()))
 }
 
-fn mmio_range_inclusive() -> RangeInclusive<usize> {
-    RangeInclusive::new(mmio::START, mmio::END)
+fn rx_ppage_desc() -> PageSliceDescriptor<Physical> {
+    rx_vpage_desc().into()
+}
+
+fn rw_vpage_desc() -> PageSliceDescriptor<Virtual> {
+    PageSliceDescriptor::from_addr(rw_start(), size_to_num_pages(rw_size()))
+}
+
+fn rw_ppage_desc() -> PageSliceDescriptor<Physical> {
+    rw_vpage_desc().into()
+}
+
+fn boot_core_stack_vpage_desc() -> PageSliceDescriptor<Virtual> {
+    PageSliceDescriptor::from_addr(
+        boot_core_stack_start(),
+        size_to_num_pages(boot_core_stack_size()),
+    )
+}
+
+fn boot_core_stack_ppage_desc() -> PageSliceDescriptor<Physical> {
+    boot_core_stack_vpage_desc().into()
 }
 
 pub fn add_space_end_page() -> *const Page<Physical> {
-    align_down::<KernelGranule::SIZE>(super::map::END) as *const _
+    align_down::<{ KernelGranule::SIZE }>(super::map::END.addr()) as *const _
+}
+
+pub fn map_kernel_binary() -> Result<(), &'static str> {
+    map_kernel_pages_at(
+        "Kernel Code + RO data",
+        rx_vpage_desc(),
+        rx_ppage_desc(),
+        Attributes {
+            memory: MemoryAttributes::CacheableDRAM,
+            access: AccessPermissions::RX,
+            execute: Execute::Always,
+        },
+    );
+
+    map_kernel_pages_at(
+        "Kernel data + BSS",
+        rw_vpage_desc(),
+        rw_ppage_desc(),
+        Attributes {
+            memory: MemoryAttributes::CacheableDRAM,
+            access: AccessPermissions::RW,
+            execute: Execute::Never,
+        },
+    );
+
+    map_kernel_pages_at(
+        "Kernel boot-core stack",
+        boot_core_stack_vpage_desc(),
+        boot_core_stack_ppage_desc(),
+        Attributes {
+            memory: MemoryAttributes::CacheableDRAM,
+            access: AccessPermissions::RW,
+            execute: Execute::Never,
+        },
+    )
 }

@@ -1,4 +1,4 @@
-use core::{fmt, marker::PhantomData};
+use core::{fmt, marker::PhantomData, ops::Add};
 
 use crate::common::align_down;
 
@@ -9,7 +9,7 @@ pub trait AddressType {}
 pub struct Physical;
 pub struct Virtual;
 
-#[derive(Clone, Copy, Debug, PartiarEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Address<A: AddressType> {
     addr: usize,
     _phantom: PhantomData<A>,
@@ -69,5 +69,16 @@ impl fmt::Display for Address<Virtual> {
         write!(f, "{:04x}_", q3)?;
         write!(f, "{:04x}_", q2)?;
         write!(f, "{:04x}", q1)
+    }
+}
+
+impl<A: AddressType> Add<usize> for Address<A> {
+    type Output = Self;
+
+    fn add(self, rhs: usize) -> Self::Output {
+        Self {
+            addr: self.addr + rhs,
+            _phantom: PhantomData,
+        }
     }
 }

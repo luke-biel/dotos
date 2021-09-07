@@ -1,8 +1,3 @@
-use core::{
-    fmt,
-    fmt::{Display, Formatter},
-};
-
 use derive_more::Display;
 
 bitflags::bitflags! {

@@ -1,7 +1,4 @@
-use core::{
-    fmt,
-    fmt::{Arguments, Write},
-};
+use core::{fmt, fmt::Arguments};
 
 use tock_registers::{
     interfaces::{Readable, Writeable},
