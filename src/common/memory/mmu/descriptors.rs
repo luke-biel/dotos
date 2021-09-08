@@ -1,11 +1,11 @@
 use core::{intrinsics::size_of, marker::PhantomData};
 
+use derive_more::Display;
+
 use crate::{
     bsp::device::memory::mmu::KernelGranule,
     common::memory::{Address, AddressType, Physical, Virtual},
 };
-
-use derive_more::Display;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MemoryAttributes {

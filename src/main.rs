@@ -46,10 +46,15 @@ unsafe fn kernel_init() -> ! {
         .enable_mmu_and_caching(kernel_addr)
         .expect("mmu init");
 
-    statics::BSP_DRIVER_MANAGER.init().expect("driver init");
     statics::BSP_DRIVER_MANAGER
-        .late_init()
-        .expect("driver late_init");
+        .init_early_drivers()
+        .expect("early driver init");
+    statics::BSP_DRIVER_MANAGER
+        .post_early_drivers()
+        .expect("post early driver init");
+    statics::BSP_DRIVER_MANAGER
+        .init_late_drivers()
+        .expect("late driver init");
     statics::BSP_DRIVER_MANAGER
         .register_irq_handlers()
         .expect("driver register_irq_handler");

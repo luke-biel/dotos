@@ -72,7 +72,8 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
             access: AccessPermissions::RX,
             execute: Execute::Always,
         },
-    ).expect("1");
+    )
+    .expect("1");
 
     map_kernel_pages_at(
         "Kernel data + BSS",
@@ -83,7 +84,8 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
             access: AccessPermissions::RW,
             execute: Execute::Never,
         },
-    ).expect("2");
+    )
+    .expect("2");
 
     map_kernel_pages_at(
         "Kernel boot-core stack",
@@ -94,7 +96,8 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
             access: AccessPermissions::RW,
             execute: Execute::Never,
         },
-    ).expect("3");
+    )
+    .expect("3");
 
     Ok(())
 }

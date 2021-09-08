@@ -16,8 +16,9 @@ pub static INTERRUPT_CONTROLLER: InterruptController = unsafe {
     )
 };
 
-pub static BSP_DRIVER_MANAGER: BSPDriverManager<3> = BSPDriverManager {
-    drivers: [&GPIO_DRIVER, &UART_DRIVER, &INTERRUPT_CONTROLLER],
+pub static BSP_DRIVER_MANAGER: BSPDriverManager<2, 1> = BSPDriverManager {
+    early_drivers: [&GPIO_DRIVER, &UART_DRIVER],
+    late_drivers: [&INTERRUPT_CONTROLLER],
 };
 
 pub use self::UART_DRIVER as CONSOLE;

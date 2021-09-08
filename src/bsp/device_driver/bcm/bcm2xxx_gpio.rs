@@ -158,6 +158,12 @@ impl Driver for Gpio {
         Ok(())
     }
 
+    unsafe fn late_init(&self) -> Result<(), &'static str> {
+        self.inner.map_locked(|inner| inner.map_pl011_uart());
+
+        Ok(())
+    }
+
     fn virt_mmio_start_addr(&self) -> Option<usize> {
         let addr = self.virt_mmio_start_addr.load(Ordering::Relaxed);
 

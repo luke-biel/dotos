@@ -1,5 +1,5 @@
 use crate::{
-    arch::arch_impl::cpu::exception::ExceptionContext,
+    arch::arch_impl::cpu::{exception::ExceptionContext, instructions::eret},
     common::{
         exception::asynchronous::{IRQContext, IRQManager},
         statics,
