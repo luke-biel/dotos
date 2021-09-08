@@ -110,7 +110,7 @@ impl GpioInner {
     }
 
     fn disable_pud_14_15_bcm2837(&mut self) {
-        const DELAY: Duration = Duration::from_micros(1);
+        const DELAY: Duration = Duration::from_micros(100);
 
         self.registers.gppud.write(GPPUD::PUD::Off);
         TIMER.sleep(DELAY);
@@ -140,10 +140,6 @@ impl Gpio {
             virt_mmio_start_addr: AtomicUsize::new(0),
             inner: IRQSafeNullLock::new(GpioInner::new(mmio_descriptor.start_addr().addr())),
         }
-    }
-
-    pub fn map_pl011_uart(&self) {
-        self.inner.map_locked(|inner| inner.map_pl011_uart())
     }
 }
 

@@ -279,8 +279,8 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
             return Err("Translation table is uninitialized");
         }
 
-        let v = vpages.iter();
-        let p = ppages.iter();
+        let v = vpages.as_slice();
+        let p = ppages.as_slice();
 
         if v.len() != p.len() {
             return Err("Mismatched lengths of virtual and physical page slices");
@@ -294,7 +294,7 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
             return Err("Tried to map outside address space");
         }
 
-        for (ppage, vpage) in p.zip(v) {
+        for (ppage, vpage) in p.iter().zip(v.iter()) {
             let descriptor = self.page_descriptor(&vpage)?;
             if descriptor.is_valid() {
                 return Err("Virtual page already mapped");

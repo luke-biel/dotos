@@ -5,6 +5,8 @@ use crate::{
     common::memory::{Address, AddressType, Physical, Virtual},
 };
 
+use derive_more::Display;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MemoryAttributes {
     CacheableDRAM,
@@ -36,8 +38,9 @@ pub struct Page<A: AddressType> {
     _phantom: PhantomData<A>,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Display)]
 #[repr(C)]
+#[display(fmt = "{}..{}", start, "self.endi_addr()")]
 pub struct PageSliceDescriptor<A: AddressType> {
     start: Address<A>,
     num_pages: usize,
@@ -121,6 +124,10 @@ impl<A: AddressType> PageSliceDescriptor<A> {
 
     pub fn endi_addr(&self) -> Address<A> {
         self.start + (self.size() - 1)
+    }
+
+    pub unsafe fn as_slice(&self) -> &[Page<A>] {
+        core::slice::from_raw_parts(self.first_page_ptr(), self.num_pages)
     }
 }
 
