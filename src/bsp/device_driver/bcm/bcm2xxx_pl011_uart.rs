@@ -1,4 +1,8 @@
-use core::{fmt, fmt::Arguments};
+use core::{
+    fmt,
+    fmt::Arguments,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 use tock_registers::{
     interfaces::{Readable, Writeable},
@@ -16,11 +20,13 @@ use crate::{
     common::{
         driver::Driver,
         exception::asynchronous::{IRQDescriptor, IRQHandler, IRQManager},
+        memory::mmu::descriptors::MMIODescriptor,
         serial_console,
         statics,
         sync::{IRQSafeNullLock, Mutex},
     },
 };
+use crate::common::memory::mmu::map_kernel_mmio;
 
 register_bitfields! {
     u32,
@@ -125,6 +131,8 @@ pub struct PL011UartInner {
 }
 
 pub struct PL011Uart {
+    mmio_descriptor: MMIODescriptor,
+    virt_mmio_start_addr: AtomicUsize,
     inner: IRQSafeNullLock<PL011UartInner>,
 }
 
@@ -135,7 +143,11 @@ impl PL011UartInner {
         }
     }
 
-    pub fn init(&mut self) {
+    pub fn init(&mut self, new_mmio_start_addr: Option<usize>) {
+        if let Some(addr) = new_mmio_start_addr {
+            unsafe { self.registers = WrappedPointer::new(addr); }
+        }
+
         self.flush();
 
         self.registers.cr.set(0);
@@ -220,9 +232,11 @@ impl fmt::Write for PL011UartInner {
 impl PL011Uart {
     const IRQ_NUMBER: IRQNumber = IRQNumber::Peripheral(PeripheralIRQ::UARTInt);
 
-    pub const unsafe fn new(start: usize) -> Self {
+    pub const unsafe fn new(mmio_descriptor: MMIODescriptor) -> Self {
         Self {
-            inner: IRQSafeNullLock::new(PL011UartInner::new(start)),
+            mmio_descriptor,
+            virt_mmio_start_addr: AtomicUsize::new(0),
+            inner: IRQSafeNullLock::new(PL011UartInner::new(mmio_descriptor.start_addr().addr())),
         }
     }
 }
@@ -233,7 +247,13 @@ impl Driver for PL011Uart {
     }
 
     unsafe fn init(&self) -> Result<(), &'static str> {
-        self.inner.map_locked(|inner| inner.init());
+        let addr = map_kernel_mmio(self.compat(), self.mmio_descriptor)?;
+
+        self.inner
+            .map_locked(|inner| inner.init(Some(addr.addr())));
+
+        self.virt_mmio_start_addr
+            .store(addr.addr(), Ordering::Relaxed);
 
         Ok(())
     }
@@ -249,6 +269,16 @@ impl Driver for PL011Uart {
         statics::INTERRUPT_CONTROLLER.enable(Self::IRQ_NUMBER);
 
         Ok(())
+    }
+
+    fn virt_mmio_start_addr(&self) -> Option<usize> {
+        let addr = self.virt_mmio_start_addr.load(Ordering::Relaxed);
+
+        if addr == 0 {
+            None
+        } else {
+            Some(addr)
+        }
     }
 }
 

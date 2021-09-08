@@ -9,6 +9,9 @@ pub trait Driver {
     fn register_irq_handler(&'static self) -> Result<(), &'static str> {
         Ok(())
     }
+    fn virt_mmio_start_addr(&self) -> Option<usize> {
+        None
+    }
 }
 
 pub trait DriverManager {

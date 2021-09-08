@@ -1,4 +1,7 @@
-use core::time::Duration;
+use core::{
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
+};
 
 use tock_registers::{
     interfaces::{ReadWriteable, Writeable},
@@ -11,11 +14,13 @@ use crate::{
     bsp::device_driver::WrappedPointer,
     common::{
         driver::Driver,
+        memory::mmu::descriptors::MMIODescriptor,
         statics::TIMER,
         sync::{IRQSafeNullLock, Mutex},
         time_manager::TimeManager,
     },
 };
+use crate::common::memory::mmu::map_kernel_mmio;
 
 // TODO: Use custom macro
 register_bitfields! {
@@ -85,6 +90,8 @@ pub struct GpioInner {
 }
 
 pub struct Gpio {
+    mmio_descriptor: MMIODescriptor,
+    virt_mmio_start_addr: AtomicUsize,
     inner: IRQSafeNullLock<GpioInner>,
 }
 
@@ -93,6 +100,14 @@ impl GpioInner {
         Self {
             registers: WrappedPointer::new(start),
         }
+    }
+
+    pub unsafe fn init(&mut self, new_mmio_start_addr: Option<usize>) -> Result<(), &'static str> {
+        if let Some(addr) = new_mmio_start_addr {
+            self.registers = WrappedPointer::new(addr);
+        }
+
+        Ok(())
     }
 
     fn disable_pud_14_15_bcm2837(&mut self) {
@@ -120,9 +135,11 @@ impl GpioInner {
 }
 
 impl Gpio {
-    pub const unsafe fn new(start: usize) -> Self {
+    pub const unsafe fn new(mmio_descriptor: MMIODescriptor) -> Self {
         Self {
-            inner: IRQSafeNullLock::new(GpioInner::new(start)),
+            mmio_descriptor,
+            virt_mmio_start_addr: AtomicUsize::new(0),
+            inner: IRQSafeNullLock::new(GpioInner::new(mmio_descriptor.start_addr().addr())),
         }
     }
 
@@ -136,9 +153,23 @@ impl Driver for Gpio {
         "bcm gpio"
     }
 
-    unsafe fn late_init(&self) -> Result<(), &'static str> {
-        self.map_pl011_uart();
+    unsafe fn init(&self) -> Result<(), &'static str> {
+        let addr = map_kernel_mmio(self.compat(), self.mmio_descriptor)?;
+        self.inner
+            .map_locked(|inner| inner.init(Some(addr.addr())))?;
+        self.virt_mmio_start_addr
+            .store(addr.addr(), Ordering::Relaxed);
 
         Ok(())
+    }
+
+    fn virt_mmio_start_addr(&self) -> Option<usize> {
+        let addr = self.virt_mmio_start_addr.load(Ordering::Relaxed);
+
+        if addr == 0 {
+            None
+        } else {
+            Some(addr)
+        }
     }
 }

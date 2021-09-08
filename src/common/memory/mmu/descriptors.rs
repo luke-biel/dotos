@@ -43,6 +43,48 @@ pub struct PageSliceDescriptor<A: AddressType> {
     num_pages: usize,
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct PageSliceDescriptorIter<A: AddressType> {
+    ptr: *const Page<A>,
+    remaining: usize,
+    len: usize,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct MMIODescriptor {
+    addr: Address<Physical>,
+    size: usize,
+}
+
+impl MMIODescriptor {
+    pub const fn new(addr: Address<Physical>, size: usize) -> Self {
+        assert!(size > 0);
+
+        Self { addr, size }
+    }
+
+    pub const fn start_addr(&self) -> Address<Physical> {
+        self.addr
+    }
+
+    pub const fn end_addr(&self) -> Address<Physical> {
+        self.addr + (self.size - 1)
+    }
+
+    pub const fn size(&self) -> usize {
+        self.size
+    }
+}
+
+impl From<MMIODescriptor> for PageSliceDescriptor<Physical> {
+    fn from(desc: MMIODescriptor) -> Self {
+        let start = desc.addr.align_down::<{ KernelGranule::SIZE }>();
+        let num_pages = ((desc.end_addr().addr() - start.addr()) >> KernelGranule::SHIFT) + 1;
+
+        Self { start, num_pages }
+    }
+}
+
 impl Default for Attributes {
     fn default() -> Self {
         Self {
@@ -89,13 +131,6 @@ impl From<PageSliceDescriptor<Virtual>> for PageSliceDescriptor<Physical> {
             num_pages: desc.num_pages,
         }
     }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct PageSliceDescriptorIter<A: AddressType> {
-    ptr: *const Page<A>,
-    remaining: usize,
-    len: usize,
 }
 
 impl<A: AddressType> PageSliceDescriptorIter<A> {

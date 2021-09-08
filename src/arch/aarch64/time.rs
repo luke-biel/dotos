@@ -61,7 +61,7 @@ impl TimeManager for GenericTimer {
                 let val: u64;
                 asm!("mrs {}, cntp_ctl_el0", out(reg) val, options(nostack, nomem));
                 if (val & 0b100) == 0 {
-                    break
+                    break;
                 }
             }
 

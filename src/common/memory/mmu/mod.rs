@@ -1,9 +1,19 @@
-use descriptors::{Attributes};
+use descriptors::Attributes;
 
 use crate::{
+    bsp::rpi3::memory::mmu::KernelGranule,
     common::{
         memory::{
-            mmu::{descriptors::PageSliceDescriptor, translation_table::TranslationTable},
+            mmu::{
+                descriptors::{
+                    AccessPermissions,
+                    Execute,
+                    MMIODescriptor,
+                    MemoryAttributes,
+                    PageSliceDescriptor,
+                },
+                translation_table::TranslationTable,
+            },
             Address,
             Physical,
             Virtual,
@@ -93,4 +103,34 @@ pub fn map_kernel_binary() -> Result<Address<Physical>, &'static str> {
     crate::bsp::device::memory::mmu::map_kernel_binary()?;
 
     Ok(kernel_base_addr)
+}
+
+pub fn map_kernel_mmio(
+    compat: &'static str,
+    descriptor: MMIODescriptor,
+) -> Result<Address<Virtual>, &'static str> {
+    let ppages: PageSliceDescriptor<Physical> = descriptor.into();
+    let offset = descriptor.start_addr().addr() & KernelGranule::MASK;
+
+    let addr = if let Some(addr) = find_and_insert_mmio_duplicate(descriptor, compat) {
+        addr
+    } else {
+        let vpages: PageSliceDescriptor<Virtual> =
+            KERNEL_TABLES.map_write(|tables| tables.next_page_slice(ppages.size()))?;
+
+        map_kernel_pages_unchecked(
+            compat,
+            vpages,
+            ppages,
+            Attributes {
+                memory: MemoryAttributes::Device,
+                access: AccessPermissions::RW,
+                execute: Execute::Never,
+            },
+        )?;
+
+        vpages.start_addr()
+    };
+
+    Ok(addr + offset)
 }

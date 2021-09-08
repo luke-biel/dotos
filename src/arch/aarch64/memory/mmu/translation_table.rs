@@ -258,8 +258,7 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
         }
 
         for (idx, entry) in self.lvl2.iter_mut().enumerate() {
-            *entry =
-                TableDescriptor::from_next_lvl_table_addr(self.lvl3[idx].start_addr());
+            *entry = TableDescriptor::from_next_lvl_table_addr(self.lvl3[idx].start_addr());
         }
 
         self.current_l3_mmio_index = Self::L3_MMIO_START_INDEX;

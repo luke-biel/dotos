@@ -5,12 +5,14 @@ use crate::bsp::{
     rpi3::{driver::BSPDriverManager, memory::map::mmio},
 };
 
-pub static GPIO_DRIVER: Gpio = unsafe { Gpio::new(mmio::GPIO_START.addr()) };
-pub static UART_DRIVER: PL011Uart = unsafe { PL011Uart::new(mmio::UART_START.addr()) };
+pub static GPIO_DRIVER: Gpio =
+    unsafe { Gpio::new(MMIODescriptor::new(mmio::GPIO_START, mmio::GPIO_SIZE)) };
+pub static UART_DRIVER: PL011Uart =
+    unsafe { PL011Uart::new(MMIODescriptor::new(mmio::UART_START, mmio::UART_SIZE)) };
 pub static INTERRUPT_CONTROLLER: InterruptController = unsafe {
     InterruptController::new(
-        mmio::LOCAL_IC_START.addr(),
-        mmio::PERIPHERAL_IC_START.addr(),
+        MMIODescriptor::new(mmio::LOCAL_IC_START, mmio::LOCAL_IC_SIZE),
+        MMIODescriptor::new(mmio::PERIPHERAL_IC_START, mmio::PERIPHERAL_IC_SIZE),
     )
 };
 
@@ -19,10 +21,13 @@ pub static BSP_DRIVER_MANAGER: BSPDriverManager<3> = BSPDriverManager {
 };
 
 pub use self::UART_DRIVER as CONSOLE;
-use crate::bsp::device_driver::bcm::{
-    bcm2xxx_gpio::GpioInner,
-    bcm2xxx_interrupt_controller::InterruptController,
-    bcm2xxx_pl011_uart::PL011UartInner,
+use crate::{
+    bsp::device_driver::bcm::{
+        bcm2xxx_gpio::GpioInner,
+        bcm2xxx_interrupt_controller::InterruptController,
+        bcm2xxx_pl011_uart::PL011UartInner,
+    },
+    common::memory::mmu::descriptors::MMIODescriptor,
 };
 
 pub const LOG_LEVEL: usize = 4;
