@@ -8,7 +8,6 @@ use crate::{
         rx_start,
     },
     common::{
-        align_down,
         memory::{
             mmu::{
                 descriptors::{
@@ -16,7 +15,6 @@ use crate::{
                     Attributes,
                     Execute,
                     MemoryAttributes,
-                    Page,
                     PageSliceDescriptor,
                 },
                 map_kernel_pages_at,
@@ -31,8 +29,6 @@ use crate::{
 
 pub type KernelGranule = TranslationGranule<{ 64 * 1024 }>;
 pub type KernelAddrSpace = AddressSpace<{ 8 * 1024 * 1024 * 1024 }>;
-
-const NUM_MEM_RANGES: usize = 3;
 
 const fn size_to_num_pages(size: usize) -> usize {
     assert!(size > 0);
@@ -68,10 +64,6 @@ fn boot_core_stack_ppage_desc() -> PageSliceDescriptor<Physical> {
     boot_core_stack_vpage_desc().into()
 }
 
-pub fn add_space_end_page() -> *const Page<Physical> {
-    align_down::<{ KernelGranule::SIZE }>(super::map::END.addr()) as *const _
-}
-
 pub fn map_kernel_binary() -> Result<(), &'static str> {
     map_kernel_pages_at(
         "Kernel Code + RO data",
@@ -82,7 +74,7 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
             access: AccessPermissions::RX,
             execute: Execute::Always,
         },
-    );
+    )?;
 
     map_kernel_pages_at(
         "Kernel data + BSS",
@@ -93,7 +85,7 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
             access: AccessPermissions::RW,
             execute: Execute::Never,
         },
-    );
+    )?;
 
     map_kernel_pages_at(
         "Kernel boot-core stack",

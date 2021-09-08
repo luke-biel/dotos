@@ -214,28 +214,6 @@ impl<const NUM_TABLES: usize> FixedSizeTranslationTable<NUM_TABLES> {
         }
     }
 
-    pub unsafe fn populate(&mut self) -> Result<(), &'static str> {
-        for (l2_nr, l2_entry) in self.lvl2.iter_mut().enumerate() {
-            *l2_entry =
-                TableDescriptor::from_next_lvl_table_addr(self.lvl3[l2_nr].phys_start_addr_usize());
-
-            for (l3_nr, l3_entry) in self.lvl3[l2_nr].iter_mut().enumerate() {
-                let virt_addr = (l2_nr << Granule512MB::SHIFT) + (l3_nr << Granule64KB::SHIFT);
-
-                let (phys_output_addr, attribute_fields) =
-                    KERNEL_VIRTUAL_LAYOUT.vaddr_properties(virt_addr)?;
-
-                *l3_entry = PageDescriptor::from_output_addr(phys_output_addr, attribute_fields);
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn base_paddr(&self) -> u64 {
-        self.lvl2.phys_start_addr_u64()
-    }
-
     fn lvl2_lvl3_index_from(&self, page: &Page<Virtual>) -> Result<(usize, usize), &'static str> {
         let addr = page.addr();
         let lvl2i = addr >> Granule512MB::SHIFT;
@@ -281,7 +259,7 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
 
         for (idx, entry) in self.lvl2.iter_mut().enumerate() {
             *entry =
-                TableDescriptor::from_next_lvl_table_addr(self.lvl3[idx].phys_start_addr_usize());
+                TableDescriptor::from_next_lvl_table_addr(self.lvl3[idx].start_addr());
         }
 
         self.current_l3_mmio_index = Self::L3_MMIO_START_INDEX;
@@ -356,7 +334,7 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
     }
 
     fn is_page_slice_mmio(&self, pages: PageSliceDescriptor<Virtual>) -> bool {
-        let mmio_range = (self.mmio_start_addr()..self.mmio_end_address());
-        mmio_range.contains(&pages.start_addr()) && mmio_range.contains(&pages.end_addr())
+        let mmio_range = self.mmio_start_addr()..=self.mmio_endi_addr();
+        mmio_range.contains(&pages.start_addr()) && mmio_range.contains(&pages.endi_addr())
     }
 }

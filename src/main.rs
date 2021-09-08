@@ -39,6 +39,7 @@ mod panic;
 
 unsafe fn kernel_init() -> ! {
     init_exception_handling();
+
     let kernel_addr = map_kernel_binary().expect("map kernel binary");
 
     statics::MMU

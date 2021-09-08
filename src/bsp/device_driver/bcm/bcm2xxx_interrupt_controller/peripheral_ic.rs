@@ -63,16 +63,14 @@ impl PeripheralInterruptController {
         info!("  peripheral IC:");
         self.handlers.map_read(|handlers| {
             let mut any = false;
-            for handler in handlers.iter() {
-                if let Some((irq, descriptor)) = handler {
-                    info!(
-                        "    {}[{}] -> \"{}\"",
-                        irq,
-                        irq.to_u64().unwrap(),
-                        descriptor.name
-                    );
-                    any = true;
-                }
+            for (irq, descriptor) in handlers.iter().flatten() {
+                info!(
+                    "    {}[{}] -> \"{}\"",
+                    irq,
+                    irq.to_u64().unwrap(),
+                    descriptor.name
+                );
+                any = true;
             }
             if !any {
                 info!("    no handlers registered");

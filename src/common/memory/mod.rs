@@ -4,9 +4,12 @@ use crate::common::align_down;
 
 pub mod mmu;
 
-pub trait AddressType {}
+pub trait AddressType: Copy {}
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Physical;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Virtual;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

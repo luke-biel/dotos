@@ -1,15 +1,9 @@
-use core::{intrinsics::size_of, marker::PhantomData, ops::RangeInclusive};
+use core::{intrinsics::size_of, marker::PhantomData};
 
 use crate::{
     bsp::device::memory::mmu::KernelGranule,
     common::memory::{Address, AddressType, Physical, Virtual},
 };
-
-#[derive(Copy, Clone, Debug)]
-pub enum Translation {
-    Id,
-    Offset(usize),
-}
 
 #[derive(Copy, Clone, Debug)]
 pub enum MemoryAttributes {
@@ -27,13 +21,6 @@ pub enum AccessPermissions {
 pub enum Execute {
     Always,
     Never,
-}
-
-pub struct TranslationDescriptor {
-    pub name: &'static str,
-    pub vrange: fn() -> RangeInclusive<usize>,
-    pub prange_translation: Translation,
-    pub attributes: Attributes,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -90,8 +77,8 @@ impl<A: AddressType> PageSliceDescriptor<A> {
         self.start
     }
 
-    pub fn end_addr(&self) -> Address<A> {
-        self.start + self.size()
+    pub fn endi_addr(&self) -> Address<A> {
+        self.start + (self.size() - 1)
     }
 }
 
@@ -104,6 +91,7 @@ impl From<PageSliceDescriptor<Virtual>> for PageSliceDescriptor<Physical> {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct PageSliceDescriptorIter<A: AddressType> {
     ptr: *const Page<A>,
     remaining: usize,
@@ -128,9 +116,7 @@ impl<A: AddressType> Iterator for PageSliceDescriptorIter<A> {
             None
         } else {
             let val = unsafe { self.ptr.read() };
-            unsafe {
-                self.ptr = self.ptr.wrapping_add(size_of::<Self::Item>());
-            }
+            self.ptr = self.ptr.wrapping_add(size_of::<Self::Item>());
             self.remaining -= 1;
             Some(val)
         }

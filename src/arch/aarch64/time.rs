@@ -57,11 +57,13 @@ impl TimeManager for GenericTimer {
             let flags = 0b11_u64;
             asm!("msr cntp_ctl_el0, {}", in(reg) flags, options(nostack, nomem));
 
-            while {
+            loop {
                 let val: u64;
                 asm!("mrs {}, cntp_ctl_el0", out(reg) val, options(nostack, nomem));
-                (val & 0b100) == 0
-            } {}
+                if (val & 0b100) == 0 {
+                    break
+                }
+            }
 
             let flags = 0_u64;
             asm!("msr cntp_ctl_el0, {}", in(reg) flags, options(nostack, nomem));
