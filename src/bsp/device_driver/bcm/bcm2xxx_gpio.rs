@@ -14,13 +14,12 @@ use crate::{
     bsp::device_driver::WrappedPointer,
     common::{
         driver::Driver,
-        memory::mmu::descriptors::MMIODescriptor,
+        memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
         statics::TIMER,
         sync::{IRQSafeNullLock, Mutex},
         time_manager::TimeManager,
     },
 };
-use crate::common::memory::mmu::map_kernel_mmio;
 
 // TODO: Use custom macro
 register_bitfields! {

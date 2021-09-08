@@ -4,7 +4,7 @@ use crate::common::align_down;
 
 pub mod mmu;
 
-pub trait AddressType: Copy {}
+pub trait AddressType: Copy + PartialEq {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Physical;
@@ -75,7 +75,7 @@ impl fmt::Display for Address<Virtual> {
     }
 }
 
-impl<A: AddressType> Add<usize> for Address<A> {
+impl<A: AddressType> const Add<usize> for Address<A> {
     type Output = Self;
 
     fn add(self, rhs: usize) -> Self::Output {

@@ -20,13 +20,12 @@ use crate::{
     common::{
         driver::Driver,
         exception::asynchronous::{IRQDescriptor, IRQHandler, IRQManager},
-        memory::mmu::descriptors::MMIODescriptor,
+        memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
         serial_console,
         statics,
         sync::{IRQSafeNullLock, Mutex},
     },
 };
-use crate::common::memory::mmu::map_kernel_mmio;
 
 register_bitfields! {
     u32,
@@ -145,7 +144,9 @@ impl PL011UartInner {
 
     pub fn init(&mut self, new_mmio_start_addr: Option<usize>) {
         if let Some(addr) = new_mmio_start_addr {
-            unsafe { self.registers = WrappedPointer::new(addr); }
+            unsafe {
+                self.registers = WrappedPointer::new(addr);
+            }
         }
 
         self.flush();
@@ -249,8 +250,7 @@ impl Driver for PL011Uart {
     unsafe fn init(&self) -> Result<(), &'static str> {
         let addr = map_kernel_mmio(self.compat(), self.mmio_descriptor)?;
 
-        self.inner
-            .map_locked(|inner| inner.init(Some(addr.addr())));
+        self.inner.map_locked(|inner| inner.init(Some(addr.addr())));
 
         self.virt_mmio_start_addr
             .store(addr.addr(), Ordering::Relaxed);

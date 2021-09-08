@@ -12,6 +12,7 @@ use crate::{
                     MemoryAttributes,
                     PageSliceDescriptor,
                 },
+                mapping::{find_and_insert_mmio_duplicate, kernel_add},
                 translation_table::TranslationTable,
             },
             Address,
@@ -25,6 +26,7 @@ use crate::{
 };
 
 pub mod descriptors;
+pub mod mapping;
 pub mod translation_table;
 
 pub trait MemoryManagementUnit {
@@ -67,7 +69,7 @@ impl<const SIZE: usize> AddressSpace<SIZE> {
 }
 
 pub fn map_kernel_pages_unchecked(
-    _name: &'static str,
+    name: &'static str,
     vpages: PageSliceDescriptor<Virtual>,
     ppages: PageSliceDescriptor<Physical>,
     attr: Attributes,
@@ -76,9 +78,20 @@ pub fn map_kernel_pages_unchecked(
         KERNEL_TABLES.map_write(|tables| tables.map_pages(vpages, ppages, attr))?;
     }
 
-    // TODO kernel_add and whole 'mapping_record' module
+    kernel_add_record(name, vpages, ppages, attr);
 
     Ok(())
+}
+
+pub fn kernel_add_record(
+    name: &'static str,
+    vpages: PageSliceDescriptor<Virtual>,
+    ppages: PageSliceDescriptor<Physical>,
+    attr: Attributes,
+) {
+    if let Err(err) = kernel_add(name, vpages, ppages, attr) {
+        crate::warn!("{}", err);
+    }
 }
 
 pub fn map_kernel_pages_at(

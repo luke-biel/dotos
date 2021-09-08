@@ -5,7 +5,7 @@ use crate::{
     common::memory::{Address, AddressType, Physical, Virtual},
 };
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MemoryAttributes {
     CacheableDRAM,
     Device,
@@ -36,7 +36,7 @@ pub struct Page<A: AddressType> {
     _phantom: PhantomData<A>,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[repr(C)]
 pub struct PageSliceDescriptor<A: AddressType> {
     start: Address<A>,

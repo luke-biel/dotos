@@ -6,6 +6,7 @@ use crate::{
     common::{
         driver::Driver,
         exception::asynchronous::{IRQContext, IRQDescriptor, IRQManager},
+        memory::mmu::descriptors::MMIODescriptor,
     },
     info,
 };
@@ -84,9 +85,9 @@ impl Iterator for PendingIRQsIter {
 }
 
 impl InterruptController {
-    pub const unsafe fn new(_local_mmio_start: usize, periph_mmio_start: usize) -> Self {
+    pub const unsafe fn new(_local_mmio: MMIODescriptor, periph_mmio: MMIODescriptor) -> Self {
         Self {
-            peripheral: PeripheralInterruptController::new(periph_mmio_start),
+            peripheral: PeripheralInterruptController::new(periph_mmio),
         }
     }
 

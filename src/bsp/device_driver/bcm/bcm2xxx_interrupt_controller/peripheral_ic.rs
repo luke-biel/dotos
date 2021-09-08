@@ -12,6 +12,7 @@ use crate::{
     },
     common::{
         exception::asynchronous::{IRQContext, IRQDescriptor, IRQManager},
+        memory::mmu::descriptors::MMIODescriptor,
         sync::{IRQSafeNullLock, InitStateLock, Mutex, ReadWriteLock},
     },
     info,
@@ -39,22 +40,24 @@ type HandlerTable = [Option<(PeripheralIRQ, IRQDescriptor)>; PeripheralIRQ::len(
 
 pub struct PeripheralInterruptController {
     wo_registers: IRQSafeNullLock<WriteOnlyRegisters>,
-    ro_registers: ReadOnlyRegisters,
+    ro_registers: InitStateLock<ReadOnlyRegisters>,
     handlers: InitStateLock<HandlerTable>,
 }
 
 impl PeripheralInterruptController {
-    pub const unsafe fn new(mmio_start: usize) -> Self {
+    pub const unsafe fn new(descriptor: MMIODescriptor) -> Self {
+        let addr = descriptor.start_addr().addr();
         Self {
-            wo_registers: IRQSafeNullLock::new(WriteOnlyRegisters::new(mmio_start)),
-            ro_registers: ReadOnlyRegisters::new(mmio_start),
+            wo_registers: IRQSafeNullLock::new(WriteOnlyRegisters::new(addr)),
+            ro_registers: InitStateLock::new(ReadOnlyRegisters::new(addr)),
             handlers: InitStateLock::new([None; PeripheralIRQ::len()]),
         }
     }
 
     fn pending(&self) -> PendingIRQs {
-        let pending_mask: u64 = (u64::from(self.ro_registers.pending2.get()) << 32)
-            | u64::from(self.ro_registers.pending1.get());
+        let pending_mask: u64 = self.ro_registers.map_read(|ro_registers| {
+            u64::from(ro_registers.pending2.get()) << 32 | u64::from(ro_registers.pending1.get())
+        });
 
         PendingIRQs::new(pending_mask)
     }

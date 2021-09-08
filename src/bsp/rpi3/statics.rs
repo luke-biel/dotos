@@ -22,12 +22,13 @@ pub static BSP_DRIVER_MANAGER: BSPDriverManager<3> = BSPDriverManager {
 
 pub use self::UART_DRIVER as CONSOLE;
 use crate::{
+    arch::arch_impl::cpu::park,
     bsp::device_driver::bcm::{
         bcm2xxx_gpio::GpioInner,
         bcm2xxx_interrupt_controller::InterruptController,
         bcm2xxx_pl011_uart::PL011UartInner,
     },
-    common::memory::mmu::descriptors::MMIODescriptor,
+    common::{driver::Driver, memory::mmu::descriptors::MMIODescriptor},
 };
 
 pub const LOG_LEVEL: usize = 4;
@@ -36,7 +37,11 @@ pub unsafe fn panic_console() -> impl fmt::Write {
     let mut gpio = GpioInner::new(mmio::GPIO_START.addr());
     let mut uart = PL011UartInner::new(mmio::UART_START.addr());
 
+    let gpio_mmio_start = GPIO_DRIVER.virt_mmio_start_addr();
+    let uart_mmio_start = UART_DRIVER.virt_mmio_start_addr();
+
+    gpio.init(gpio_mmio_start).unwrap_or_else(|_| park());
     gpio.map_pl011_uart();
-    uart.init();
+    uart.init(uart_mmio_start);
     uart
 }
