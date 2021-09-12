@@ -24,6 +24,8 @@ use crate::{
         Virtual,
     },
 };
+use crate::common::statics::KERNEL_TABLES;
+use crate::common::sync::ReadWriteLock;
 
 pub type KernelGranule = TranslationGranule<{ 64 * 1024 }>;
 pub type KernelAddrSpace = AddressSpace<{ 8 * 1024 * 1024 * 1024 }>;

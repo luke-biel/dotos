@@ -38,9 +38,6 @@ pub unsafe fn panic_console() -> impl fmt::Write {
     let mut gpio = GpioInner::new(mmio::GPIO_START.addr());
     let mut uart = PL011UartInner::new(mmio::UART_START.addr());
 
-    // Reset translation so that panic writes to UART directly - FIXME
-    asm!("msr ttbr0_el1, xzr");
-
     gpio.init(None).unwrap_or_else(|_| park());
     uart.init(None);
     gpio.map_pl011_uart();

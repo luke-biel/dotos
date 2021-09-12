@@ -16,3 +16,4 @@ derive_more = "0.99.16"
 
 [profile.release]
 debug = true
+opt-level = 2

@@ -17,6 +17,8 @@ use crate::{
     },
     info,
 };
+use crate::common::driver::Driver;
+use crate::common::memory::mmu::map_kernel_mmio;
 
 register_structs! {
     WriteOnlyRegisterBlock {
@@ -39,6 +41,7 @@ type ReadOnlyRegisters = WrappedPointer<ReadOnlyRegisterBlock>;
 type HandlerTable = [Option<(PeripheralIRQ, IRQDescriptor)>; PeripheralIRQ::len()];
 
 pub struct PeripheralInterruptController {
+    descriptor: MMIODescriptor,
     wo_registers: IRQSafeNullLock<WriteOnlyRegisters>,
     ro_registers: InitStateLock<ReadOnlyRegisters>,
     handlers: InitStateLock<HandlerTable>,
@@ -48,6 +51,7 @@ impl PeripheralInterruptController {
     pub const unsafe fn new(descriptor: MMIODescriptor) -> Self {
         let addr = descriptor.start_addr().addr();
         Self {
+            descriptor,
             wo_registers: IRQSafeNullLock::new(WriteOnlyRegisters::new(addr)),
             ro_registers: InitStateLock::new(ReadOnlyRegisters::new(addr)),
             handlers: InitStateLock::new([None; PeripheralIRQ::len()]),
@@ -124,5 +128,20 @@ impl IRQManager for PeripheralInterruptController {
                     Some((_, ref d)) => d.handler.handle().expect("Handling IRQ"),
                 });
         })
+    }
+}
+
+impl Driver for PeripheralInterruptController {
+    fn compat(&self) -> &'static str {
+        "bcm peripheral interrupt controller"
+    }
+
+    unsafe fn init(&self) -> Result<(), &'static str> {
+        let addr = map_kernel_mmio(self.compat(), self.descriptor)?.addr();
+
+        self.wo_registers.map_locked(|r| *r = WriteOnlyRegisters::new(addr));
+        self.ro_registers.map_write(|r| *r = ReadOnlyRegisters::new(addr));
+
+        Ok(())
     }
 }

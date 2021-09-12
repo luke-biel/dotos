@@ -103,6 +103,10 @@ impl Driver for InterruptController {
     fn compat(&self) -> &'static str {
         "bcm interrupt controller"
     }
+
+    unsafe fn init(&self) -> Result<(), &'static str> {
+        self.peripheral.init()
+    }
 }
 
 impl IRQManager for InterruptController {

@@ -27,6 +27,7 @@ use crate::{
     },
 };
 use crate::bsp::rpi3::memory::mmu::KernelGranule;
+use core::fmt::Formatter;
 
 register_bitfields! {u64,
     STAGE1_TABLE_DESCRIPTOR [
@@ -95,10 +96,16 @@ struct TableDescriptor {
     value: u64,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub struct PageDescriptor {
     value: u64,
+}
+
+impl core::fmt::Debug for PageDescriptor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "0x{:x}", self.value)
+    }
 }
 
 trait StartAddr {
@@ -280,14 +287,14 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
         attributes: Attributes,
     ) -> Result<(), &'static str> {
         if !self.is_initialized {
-            return Err("Translation table is uninitialized");
+            return Err("map_pages: Translation table is uninitialized");
         }
 
         let v = vpages.as_slice();
         let p = ppages.as_slice();
 
         if v.len() != p.len() {
-            return Err("Mismatched lengths of virtual and physical page slices");
+            return Err("map_pages: Mismatched lengths of virtual and physical page slices");
         }
 
         if v.is_empty() {
@@ -295,13 +302,13 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
         }
 
         if p.last().unwrap().addr() >= END.addr() {
-            return Err("Tried to map outside address space");
+            return Err("map_pages: Tried to map outside address space");
         }
 
         for (ppage, vpage) in p.iter().zip(v.iter()) {
             let descriptor = self.page_descriptor(vpage)?;
             if descriptor.is_valid() {
-                return Err("Virtual page already mapped");
+                return Err("map_pages: Virtual page already mapped");
             }
 
             *descriptor = PageDescriptor::from_output_addr(ppage.addr(), attributes);
@@ -315,16 +322,16 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
         num_pages: usize,
     ) -> Result<PageSliceDescriptor<Virtual>, &'static str> {
         if !self.is_initialized {
-            return Err("Translation table is uninitialized");
+            return Err("next_page_slice: Translation table is uninitialized");
         }
 
         if num_pages == 0 {
-            return Err("num_pages = 0");
+            return Err("next_page_slice: num_pages = 0");
         }
 
         // TODO: Put this magic number somewhere
         if (self.current_l3_mmio_index + num_pages) > 8191 {
-            return Err("No more MMIO space");
+            return Err("next_page_slice: No more MMIO space");
         }
 
         let addr = Address::new(
