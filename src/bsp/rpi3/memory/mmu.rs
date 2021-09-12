@@ -73,10 +73,10 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
             execute: Execute::Always,
         },
     )
-    .expect("1");
+    .expect("map Kernel Code & RO data");
 
     map_kernel_pages_at(
-        "Kernel data + BSS",
+        "Kernel Data + BSS",
         rw_vpage_desc(),
         rw_ppage_desc(),
         Attributes {
@@ -85,7 +85,7 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
             execute: Execute::Never,
         },
     )
-    .expect("2");
+    .expect("map Kernel Data & BSS");
 
     map_kernel_pages_at(
         "Kernel boot-core stack",
@@ -97,7 +97,7 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
             execute: Execute::Never,
         },
     )
-    .expect("3");
+    .expect("map Kernel BOOT-CORE stack");
 
     Ok(())
 }

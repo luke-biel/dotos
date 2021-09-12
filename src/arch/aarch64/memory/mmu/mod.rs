@@ -40,16 +40,16 @@ impl Aarch64MemoryManagementUnit {
     fn configure_translation_control(&self) {
         let t0sz = (64 - KernelAddrSpace::SHIFT) as u64;
 
-        let tcr_el1: u64 = (1 << 37) // TBI0
-            + (0b010 << 32) // IPS
-            + (0b01 << 14) // TG0
-            + (0b11 << 12) // SH0
-            + (0b01 << 10) // ORGN0
-            + (0b01 << 8) // IRGN0
-            // + (0 << 7) // EPD0
-            // + (0 << 22) // A1
+        let tcr_el1: u64 = (0b010 << 32) // IPS Bits40
+            // + (0 << 37) // TBI0 Used
+            + (0b01 << 14) // TG0 64KB
+            + (0b11 << 12) // SH0 Inner
+            + (0b01 << 10) // ORGN0 WB_RA_WA_C
+            + (0b01 << 8) // IRGN0 WB_RA_WA_C
+            // + (0 << 7) // EPD0 EnableTTBR0 Walks
+            // + (0 << 22) // A1 TTBR0
             + (t0sz & 0b11_1111) // T0SZ
-            + (1 << 23); // EPD1
+            + (1 << 23); // EPD1 DisableTTBR1 Walks
         unsafe { asm!("msr tcr_el1, {}", in(reg) tcr_el1, options(nostack, nomem)) };
     }
 }
@@ -78,7 +78,9 @@ impl MemoryManagementUnit for Aarch64MemoryManagementUnit {
 
         asm!("isb sy");
 
-        let sctlr_el1: u64 = (1 << 12) + (1 << 2) + 1;
+        let mut sctlr_el1: u64;
+        asm!("mrs {}, sctlr_el1", out(reg) sctlr_el1, options(nostack, nomem));
+        sctlr_el1 &= (1 << 12) + (1 << 2) + 1;
         asm!("msr sctlr_el1, {}", in(reg) sctlr_el1, options(nostack, nomem));
 
         asm!("isb sy");

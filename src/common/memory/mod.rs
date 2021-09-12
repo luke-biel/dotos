@@ -29,9 +29,9 @@ impl<A: AddressType> Address<A> {
         }
     }
 
-    pub const fn align_down<const T: usize>(self) -> Self {
+    pub const fn align_down<const SHIFT: usize>(self) -> Self {
         Self {
-            addr: align_down::<T>(self.addr),
+            addr: align_down::<SHIFT>(self.addr),
             _phantom: PhantomData,
         }
     }

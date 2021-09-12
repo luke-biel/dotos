@@ -81,7 +81,7 @@ impl MMIODescriptor {
 
 impl From<MMIODescriptor> for PageSliceDescriptor<Physical> {
     fn from(desc: MMIODescriptor) -> Self {
-        let start = desc.addr.align_down::<{ KernelGranule::SIZE }>();
+        let start = desc.addr.align_down::<{ KernelGranule::SHIFT }>();
         let num_pages = ((desc.end_addr().addr() - start.addr()) >> KernelGranule::SHIFT) + 1;
 
         Self { start, num_pages }
@@ -112,6 +112,10 @@ impl<A: AddressType> PageSliceDescriptor<A> {
 
     pub fn iter(&self) -> PageSliceDescriptorIter<A> {
         PageSliceDescriptorIter::new(self.first_page_ptr(), self.num_pages)
+    }
+
+    pub fn num_pages(&self) -> usize {
+        self.num_pages
     }
 
     pub fn size(&self) -> usize {

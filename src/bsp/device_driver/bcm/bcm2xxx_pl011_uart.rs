@@ -26,6 +26,8 @@ use crate::{
         sync::{IRQSafeNullLock, Mutex},
     },
 };
+use crate::common::statics::KERNEL_TABLES;
+use crate::common::sync::ReadWriteLock;
 
 register_bitfields! {
     u32,
@@ -47,10 +49,10 @@ register_bitfields! {
 
     LCR_H [
         WLEN OFFSET(5) NUMBITS(2) [
-            FiveBit = 0b00,
-            SixBit = 0b01,
-            SevenBit = 0b10,
-            EightBit = 0b11
+            Five = 0b00,
+            Six = 0b01,
+            Seven = 0b10,
+            Eight = 0b11
         ],
 
         FEN  OFFSET(4) NUMBITS(1) [
@@ -142,7 +144,7 @@ impl PL011UartInner {
         }
     }
 
-    pub fn init(&mut self, new_mmio_start_addr: Option<usize>) {
+    pub fn init(&mut self, new_mmio_start_addr: Option<usize>) -> Result<(), &'static str> {
         if let Some(addr) = new_mmio_start_addr {
             unsafe {
                 self.registers = WrappedPointer::new(addr);
@@ -159,7 +161,7 @@ impl PL011UartInner {
 
         self.registers
             .lcr_h
-            .write(LCR_H::FEN::FifosEnabled + LCR_H::WLEN::EightBit);
+            .write(LCR_H::FEN::FifosEnabled + LCR_H::WLEN::Eight);
 
         self.registers.ifls.write(IFLS::RXIFLSEL::OneEigth);
         self.registers
@@ -169,6 +171,8 @@ impl PL011UartInner {
         self.registers
             .cr
             .write(CR::UARTEN::Enabled + CR::TXE::Enabled + CR::RXE::Enabled);
+
+        Ok(())
     }
 
     fn flush(&self) {
@@ -250,7 +254,9 @@ impl Driver for PL011Uart {
     unsafe fn init(&self) -> Result<(), &'static str> {
         let addr = map_kernel_mmio(self.compat(), self.mmio_descriptor)?;
 
-        self.inner.map_locked(|inner| inner.init(Some(addr.addr())));
+        self.inner.map_locked(|inner| {
+            inner.init(Some(addr.addr()))
+        })?;
 
         self.virt_mmio_start_addr
             .store(addr.addr(), Ordering::Relaxed);

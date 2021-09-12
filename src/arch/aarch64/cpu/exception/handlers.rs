@@ -1,15 +1,17 @@
 use crate::{
-    arch::arch_impl::cpu::{exception::ExceptionContext, instructions::eret},
+    arch::arch_impl::cpu::exception::ExceptionContext,
     common::{
         exception::asynchronous::{IRQContext, IRQManager},
         statics,
     },
 };
 
-unsafe fn default_handler(e: &mut ExceptionContext) {
+unsafe fn default_handler(kind: &'static str, e: &mut ExceptionContext) {
     let far_el1: u64;
     asm!("mrs {}, far_el1", out(reg) far_el1, options(nostack, nomem));
-    panic!("CPU Exception\nfar_el1: {:#018x}\n{}", far_el1, e)
+    let esr_el1: u64;
+    asm!("mrs {}, esr_el1", out(reg) esr_el1, options(nostack, nomem));
+    panic!("CPU Exception `{}`\nfar_el1: {:#018x}\nesr_el1: 0x{:x}\n{}", kind, far_el1, esr_el1, e)
 }
 
 #[no_mangle]
@@ -29,7 +31,7 @@ unsafe extern "C" fn current_el0_serror(_e: &mut ExceptionContext) {
 
 #[no_mangle]
 unsafe extern "C" fn current_elx_sync(e: &mut ExceptionContext) {
-    default_handler(e)
+    default_handler("current_elx_sync", e)
 }
 
 #[no_mangle]
@@ -40,35 +42,35 @@ unsafe extern "C" fn current_elx_irq(_e: &mut ExceptionContext) {
 
 #[no_mangle]
 unsafe extern "C" fn current_elx_serror(e: &mut ExceptionContext) {
-    default_handler(e)
+    default_handler("current_elx_serror", e)
 }
 
 #[no_mangle]
 unsafe extern "C" fn lower_aarch64_sync(e: &mut ExceptionContext) {
-    default_handler(e)
+    default_handler("lower_aarch64_sync", e)
 }
 
 #[no_mangle]
 unsafe extern "C" fn lower_aarch64_irq(e: &mut ExceptionContext) {
-    default_handler(e)
+    default_handler("lower_aarch64_irq", e)
 }
 
 #[no_mangle]
 unsafe extern "C" fn lower_aarch64_serror(e: &mut ExceptionContext) {
-    default_handler(e)
+    default_handler("lower_aarch64_serror", e)
 }
 
 #[no_mangle]
 unsafe extern "C" fn lower_aarch32_sync(e: &mut ExceptionContext) {
-    default_handler(e)
+    default_handler("lower_aarch32_sync", e)
 }
 
 #[no_mangle]
 unsafe extern "C" fn lower_aarch32_irq(e: &mut ExceptionContext) {
-    default_handler(e)
+    default_handler("lower_aarch32_irq", e)
 }
 
 #[no_mangle]
 unsafe extern "C" fn lower_aarch32_serror(e: &mut ExceptionContext) {
-    default_handler(e)
+    default_handler("lower_aarch32_serror", e)
 }

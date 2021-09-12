@@ -38,6 +38,8 @@ SECTIONS
         . = ALIGN(16);
         __bss_ende = .;
     } :NONE
+
+    . = ALIGN(64K);
     __rw_ende = .;
 
     __boot_core_stack_guard_page_start = .;

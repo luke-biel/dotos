@@ -26,6 +26,7 @@ use crate::{
         Virtual,
     },
 };
+use crate::bsp::rpi3::memory::mmu::KernelGranule;
 
 register_bitfields! {u64,
     STAGE1_TABLE_DESCRIPTOR [
@@ -94,9 +95,9 @@ struct TableDescriptor {
     value: u64,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[repr(C)]
-struct PageDescriptor {
+pub struct PageDescriptor {
     value: u64,
 }
 
@@ -109,7 +110,9 @@ const NUM_LVL2_TABLES: usize = KernelAddrSpace::SIZE >> Granule512MB::SHIFT;
 #[repr(C)]
 #[repr(align(65536))]
 pub struct FixedSizeTranslationTable<const NUM_TABLES: usize> {
-    lvl3: [[PageDescriptor; 8192]; NUM_TABLES],
+    // 64 KB windows per page entry
+    pub lvl3: [[PageDescriptor; 8192]; NUM_TABLES],
+    // 512 MB descriptors
     lvl2: [TableDescriptor; NUM_TABLES],
     current_l3_mmio_index: usize,
     is_initialized: bool,
@@ -131,7 +134,7 @@ impl TableDescriptor {
     pub fn from_next_lvl_table_addr(next_lvl_table: Address<Physical>) -> Self {
         let val = InMemoryRegister::<u64, STAGE1_TABLE_DESCRIPTOR::Register>::new(0);
 
-        let shifted = usize::from(next_lvl_table) >> Granule64KB::SHIFT;
+        let shifted = next_lvl_table.addr() >> Granule64KB::SHIFT;
         val.write(
             STAGE1_TABLE_DESCRIPTOR::NEXT_LEVEL_TABLE_ADDR_64KB.val(shifted as u64)
                 + STAGE1_TABLE_DESCRIPTOR::TYPE::Table
@@ -204,6 +207,7 @@ impl<const NUM_TABLES: usize> FixedSizeTranslationTable<NUM_TABLES> {
     const L3_MMIO_START_INDEX: usize = 8192 / 2;
 
     pub const fn new() -> Self {
+        assert!(KernelGranule::SIZE == Granule64KB::SIZE);
         assert!(NUM_TABLES > 0);
 
         Self {
@@ -295,7 +299,7 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
         }
 
         for (ppage, vpage) in p.iter().zip(v.iter()) {
-            let descriptor = self.page_descriptor(&vpage)?;
+            let descriptor = self.page_descriptor(vpage)?;
             if descriptor.is_valid() {
                 return Err("Virtual page already mapped");
             }
@@ -319,7 +323,7 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
         }
 
         // TODO: Put this magic number somewhere
-        if (self.current_l3_mmio_index + num_pages) > 8192 {
+        if (self.current_l3_mmio_index + num_pages) > 8191 {
             return Err("No more MMIO space");
         }
 
