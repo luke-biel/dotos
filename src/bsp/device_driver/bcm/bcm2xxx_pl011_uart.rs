@@ -23,11 +23,10 @@ use crate::{
         memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
         serial_console,
         statics,
-        sync::{IRQSafeNullLock, Mutex},
+        statics::KERNEL_TABLES,
+        sync::{IRQSafeNullLock, Mutex, ReadWriteLock},
     },
 };
-use crate::common::statics::KERNEL_TABLES;
-use crate::common::sync::ReadWriteLock;
 
 register_bitfields! {
     u32,
@@ -254,9 +253,8 @@ impl Driver for PL011Uart {
     unsafe fn init(&self) -> Result<(), &'static str> {
         let addr = map_kernel_mmio(self.compat(), self.mmio_descriptor)?;
 
-        self.inner.map_locked(|inner| {
-            inner.init(Some(addr.addr()))
-        })?;
+        self.inner
+            .map_locked(|inner| inner.init(Some(addr.addr())))?;
 
         self.virt_mmio_start_addr
             .store(addr.addr(), Ordering::Relaxed);

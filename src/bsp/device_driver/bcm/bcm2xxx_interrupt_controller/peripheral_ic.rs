@@ -11,14 +11,13 @@ use crate::{
         WrappedPointer,
     },
     common::{
+        driver::Driver,
         exception::asynchronous::{IRQContext, IRQDescriptor, IRQManager},
-        memory::mmu::descriptors::MMIODescriptor,
+        memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
         sync::{IRQSafeNullLock, InitStateLock, Mutex, ReadWriteLock},
     },
     info,
 };
-use crate::common::driver::Driver;
-use crate::common::memory::mmu::map_kernel_mmio;
 
 register_structs! {
     WriteOnlyRegisterBlock {
@@ -139,8 +138,10 @@ impl Driver for PeripheralInterruptController {
     unsafe fn init(&self) -> Result<(), &'static str> {
         let addr = map_kernel_mmio(self.compat(), self.descriptor)?.addr();
 
-        self.wo_registers.map_locked(|r| *r = WriteOnlyRegisters::new(addr));
-        self.ro_registers.map_write(|r| *r = ReadOnlyRegisters::new(addr));
+        self.wo_registers
+            .map_locked(|r| *r = WriteOnlyRegisters::new(addr));
+        self.ro_registers
+            .map_write(|r| *r = ReadOnlyRegisters::new(addr));
 
         Ok(())
     }

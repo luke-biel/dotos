@@ -1,11 +1,15 @@
-use crate::common::{
-    memory::{
-        mmu::descriptors::{Attributes, MMIODescriptor, MemoryAttributes, PageSliceDescriptor},
-        Address,
-        Physical,
-        Virtual,
+use crate::{
+    common::{
+        memory::{
+            mmu::descriptors::{Attributes, MMIODescriptor, MemoryAttributes, PageSliceDescriptor},
+            Address,
+            Physical,
+            Virtual,
+        },
+        sync::{InitStateLock, ReadWriteLock},
     },
-    sync::{InitStateLock, ReadWriteLock},
+    info,
+    print,
 };
 
 #[derive(Clone, Debug)]
@@ -20,7 +24,7 @@ pub struct MappingRecord {
     items: [Option<MappingRecordEntry>; 12],
 }
 
-static KERNEL_MAPPING_RECORD: InitStateLock<MappingRecord> =
+pub static KERNEL_MAPPING_RECORD: InitStateLock<MappingRecord> =
     InitStateLock::new(MappingRecord::new());
 
 impl MappingRecordEntry {
@@ -91,6 +95,33 @@ impl MappingRecord {
         let next = self.next_free_entry_mut()?;
         *next = Some(MappingRecordEntry::new(name, vpages, ppages, attr));
         Ok(())
+    }
+
+    pub fn print_status(&self) {
+        info!("memory mapping:");
+        for entry in self.items.iter().flatten() {
+            info!(
+                "  - physical: {}..{}\n                  \
+            - virtual: {}..{}\n                  \
+            - attributes: {}\n                  \
+            - users:",
+                entry.pages.start_addr(),
+                entry.pages.endi_addr(),
+                entry.start_addr,
+                entry.start_addr + (entry.pages.size() - 1),
+                entry.attributes
+            );
+            let mut nl = false;
+            for user in entry.users.iter().flatten() {
+                print!(
+                    "{}                    - `{}`",
+                    if nl { "\n" } else { "" },
+                    user
+                );
+                nl = true;
+            }
+            print!("\n");
+        }
     }
 }
 

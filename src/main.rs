@@ -28,6 +28,7 @@ use crate::{
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
         state::KernelState,
         statics,
+        sync::ReadWriteLock,
     },
 };
 
@@ -77,6 +78,7 @@ unsafe fn kernel_main() -> ! {
 
     statics::BSP_DRIVER_MANAGER.print_status();
     statics::INTERRUPT_CONTROLLER.print_status();
+    statics::KERNEL_MAPPING_RECORD.map_read(|r| r.print_status());
 
     // // TEMP
     // let big_addr: u64 = 1024 * 1024 * 1024 * 8;

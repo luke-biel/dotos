@@ -1,4 +1,4 @@
-use core::convert;
+use core::{convert, fmt::Formatter};
 
 use tock_registers::{
     interfaces::{Readable, Writeable},
@@ -8,7 +8,10 @@ use tock_registers::{
 
 use crate::{
     arch::arch_impl::memory::mmu::{mair, Granule512MB, Granule64KB},
-    bsp::device::memory::{map::END, mmu::KernelAddrSpace},
+    bsp::{
+        device::memory::{map::END, mmu::KernelAddrSpace},
+        rpi3::memory::mmu::KernelGranule,
+    },
     common::memory::{
         mmu::{
             descriptors::{
@@ -26,8 +29,6 @@ use crate::{
         Virtual,
     },
 };
-use crate::bsp::rpi3::memory::mmu::KernelGranule;
-use core::fmt::Formatter;
 
 register_bitfields! {u64,
     STAGE1_TABLE_DESCRIPTOR [
@@ -173,7 +174,7 @@ impl convert::From<Attributes>
         };
 
         desc += match attribute_fields.execute {
-            Execute::Always => STAGE1_PAGE_DESCRIPTOR::PXN::False,
+            Execute::Allow => STAGE1_PAGE_DESCRIPTOR::PXN::False,
             Execute::Never => STAGE1_PAGE_DESCRIPTOR::PXN::True,
         };
 

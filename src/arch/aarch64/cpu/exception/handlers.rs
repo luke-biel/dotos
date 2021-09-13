@@ -11,7 +11,10 @@ unsafe fn default_handler(kind: &'static str, e: &mut ExceptionContext) {
     asm!("mrs {}, far_el1", out(reg) far_el1, options(nostack, nomem));
     let esr_el1: u64;
     asm!("mrs {}, esr_el1", out(reg) esr_el1, options(nostack, nomem));
-    panic!("CPU Exception `{}`\nfar_el1: {:#018x}\nesr_el1: 0x{:x}\n{}", kind, far_el1, esr_el1, e)
+    panic!(
+        "CPU Exception `{}`\nfar_el1: {:#018x}\nesr_el1: 0x{:x}\n{}",
+        kind, far_el1, esr_el1, e
+    )
 }
 
 #[no_mangle]

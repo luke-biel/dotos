@@ -7,25 +7,30 @@ use crate::{
     common::memory::{Address, AddressType, Physical, Virtual},
 };
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Display)]
 pub enum MemoryAttributes {
+    #[display(fmt = "C")]
     CacheableDRAM,
+    #[display(fmt = "D")]
     Device,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Display)]
 pub enum AccessPermissions {
     RX,
     RW,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Display)]
 pub enum Execute {
-    Always,
+    #[display(fmt = "E")]
+    Allow,
+    #[display(fmt = "N")]
     Never,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Display)]
+#[display(fmt = "{}{}{}", memory, access, execute)]
 pub struct Attributes {
     pub memory: MemoryAttributes,
     pub access: AccessPermissions,

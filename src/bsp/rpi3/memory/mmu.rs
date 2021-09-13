@@ -7,25 +7,27 @@ use crate::{
         rx_size,
         rx_start,
     },
-    common::memory::{
-        mmu::{
-            descriptors::{
-                AccessPermissions,
-                Attributes,
-                Execute,
-                MemoryAttributes,
-                PageSliceDescriptor,
+    common::{
+        memory::{
+            mmu::{
+                descriptors::{
+                    AccessPermissions,
+                    Attributes,
+                    Execute,
+                    MemoryAttributes,
+                    PageSliceDescriptor,
+                },
+                map_kernel_pages_at,
+                AddressSpace,
+                TranslationGranule,
             },
-            map_kernel_pages_at,
-            AddressSpace,
-            TranslationGranule,
+            Physical,
+            Virtual,
         },
-        Physical,
-        Virtual,
+        statics::KERNEL_TABLES,
+        sync::ReadWriteLock,
     },
 };
-use crate::common::statics::KERNEL_TABLES;
-use crate::common::sync::ReadWriteLock;
 
 pub type KernelGranule = TranslationGranule<{ 64 * 1024 }>;
 pub type KernelAddrSpace = AddressSpace<{ 8 * 1024 * 1024 * 1024 }>;
@@ -66,19 +68,19 @@ fn boot_core_stack_ppage_desc() -> PageSliceDescriptor<Physical> {
 
 pub fn map_kernel_binary() -> Result<(), &'static str> {
     map_kernel_pages_at(
-        "Kernel Code + RO data",
+        "kernel code + RO data",
         rx_vpage_desc(),
         rx_ppage_desc(),
         Attributes {
             memory: MemoryAttributes::CacheableDRAM,
             access: AccessPermissions::RX,
-            execute: Execute::Always,
+            execute: Execute::Allow,
         },
     )
     .expect("map Kernel Code & RO data");
 
     map_kernel_pages_at(
-        "Kernel Data + BSS",
+        "kernel data + BSS",
         rw_vpage_desc(),
         rw_ppage_desc(),
         Attributes {
@@ -90,7 +92,7 @@ pub fn map_kernel_binary() -> Result<(), &'static str> {
     .expect("map Kernel Data & BSS");
 
     map_kernel_pages_at(
-        "Kernel boot-core stack",
+        "kernel boot-core stack",
         boot_core_stack_vpage_desc(),
         boot_core_stack_ppage_desc(),
         Attributes {

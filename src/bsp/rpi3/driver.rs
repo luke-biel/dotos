@@ -48,11 +48,15 @@ impl<const T: usize, const L: usize> DriverManager for BSPDriverManager<T, L> {
 impl<const T: usize, const L: usize> BSPDriverManager<T, L> {
     pub fn print_status(&self) {
         info!("drivers loaded:");
-        for (i, driver) in self.early_drivers.iter().enumerate() {
-            info!("  {}): {}", i, driver.compat());
+        let mut i = 0;
+        for driver in self.early_drivers.iter() {
+            info!("  {}): `{}`", i, driver.compat());
+            i += 1;
         }
-        for (i, driver) in self.late_drivers.iter().enumerate() {
-            info!("  {}): {}", i, driver.compat());
+        info!("-- stage 2 drivers --");
+        for driver in self.late_drivers.iter() {
+            info!("  {}): `{}`", i, driver.compat());
+            i += 1;
         }
     }
 }
