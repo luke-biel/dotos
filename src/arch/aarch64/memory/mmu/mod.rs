@@ -21,6 +21,7 @@ pub struct Aarch64MemoryManagementUnit;
 pub type Granule512MB = TranslationGranule<{ 512 * 1024 * 1024 }>;
 pub type Granule64KB = TranslationGranule<{ 64 * 1024 }>;
 
+#[link_section = ".data"]
 pub static KERNEL_TABLES: InitStateLock<KernelTranslationTable> =
     InitStateLock::new(KernelTranslationTable::new());
 

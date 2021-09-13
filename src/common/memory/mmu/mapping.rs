@@ -101,10 +101,10 @@ impl MappingRecord {
         info!("memory mapping:");
         for entry in self.items.iter().flatten() {
             info!(
-                "  - physical: {}..{}\n                  \
-            - virtual: {}..{}\n                  \
-            - attributes: {}\n                  \
-            - users:",
+                "  - physical: {}..{}\n                    \
+              virtual: {}..{}\n                    \
+              attributes: {}\n                    \
+              users:",
                 entry.pages.start_addr(),
                 entry.pages.endi_addr(),
                 entry.start_addr,
@@ -114,7 +114,7 @@ impl MappingRecord {
             let mut nl = false;
             for user in entry.users.iter().flatten() {
                 print!(
-                    "{}                    - `{}`",
+                    "{}                      - `{}`",
                     if nl { "\n" } else { "" },
                     user
                 );
