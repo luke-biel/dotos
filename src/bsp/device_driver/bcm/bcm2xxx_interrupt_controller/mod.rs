@@ -26,6 +26,9 @@ pub enum LocalIRQ {}
 
 #[derive(FromPrimitive, ToPrimitive, Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Display)]
 pub enum PeripheralIRQ {
+    SystemTimer1 = 1,
+    SystemTimer3 = 3,
+    USBController = 9,
     AuxInt = 29,
     I2CSpiSlvInt = 43,
     Pwa0 = 45,

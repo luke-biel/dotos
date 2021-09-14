@@ -6,6 +6,8 @@ pub mod state;
 pub mod statics;
 pub mod sync;
 pub mod time_manager;
+pub mod task;
+pub mod scheduler;
 
 pub const fn align_down<const SHIFT: usize>(value: usize) -> usize {
     value & !((1 << SHIFT) - 1)

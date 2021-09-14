@@ -9,7 +9,7 @@ use crate::{
         sync::{InitStateLock, ReadWriteLock},
     },
     info,
-    print,
+    print, println
 };
 
 #[derive(Clone, Debug)]
@@ -120,7 +120,7 @@ impl MappingRecord {
                 );
                 nl = true;
             }
-            print!("\n");
+            println!();
         }
     }
 }

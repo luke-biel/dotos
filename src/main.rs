@@ -12,6 +12,11 @@
 #![feature(min_specialization)]
 #![feature(const_fn_trait_bound)]
 #![feature(exact_size_is_empty)]
+#![feature(maybe_uninit_uninit_array)]
+#![feature(maybe_uninit_array_assume_init)]
+#![feature(const_for)]
+#![feature(const_mut_refs)]
+#![feature(const_maybe_uninit_write)]
 
 use arch::aarch64::cpu::exception::current_privilege_level;
 
