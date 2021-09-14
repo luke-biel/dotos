@@ -1,7 +1,6 @@
 use core::{marker::PhantomData, ops::Deref};
 
 pub mod bcm;
-pub mod system_timer;
 
 pub struct WrappedPointer<T> {
     pointer: usize,

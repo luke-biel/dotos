@@ -1,5 +1,6 @@
-use crate::arch::arch_impl::task::CpuContext;
 use num_derive::{FromPrimitive, ToPrimitive};
+
+use crate::arch::arch_impl::task::CpuContext;
 
 pub struct Task {
     pub context: CpuContext,

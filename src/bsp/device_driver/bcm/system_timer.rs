@@ -7,6 +7,4 @@
 /// init SystemTime1 irq_handler from driver code
 /// Create scaffolding for system time listeners
 /// Connect Scheduler to this
-pub struct SystemTimer {
-    
-}
+pub struct SystemTimer {}

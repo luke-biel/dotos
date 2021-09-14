@@ -1,17 +1,23 @@
-use crate::common::task::{TaskState, Task};
-use crate::arch::arch_impl::task::CpuContext;
-use crate::common::sync::IRQSafeNullLock;
-use core::mem::{MaybeUninit, transmute, forget};
+use core::mem::{forget, transmute, MaybeUninit};
+
+use crate::{
+    arch::arch_impl::task::CpuContext,
+    common::{
+        sync::IRQSafeNullLock,
+        task::{Task, TaskState},
+    },
+};
 
 pub const INIT_TASK: Task = Task {
     context: CpuContext::zero(),
     state: TaskState::Running,
     counter: 0,
     priority: 1,
-    preempt_count: 0
+    preempt_count: 0,
 };
 
-pub static SCHEDULER: IRQSafeNullLock<Scheduler<64>> = IRQSafeNullLock::new(Scheduler::new().with(INIT_TASK));
+pub static SCHEDULER: IRQSafeNullLock<Scheduler<64>> =
+    IRQSafeNullLock::new(Scheduler::new().with(INIT_TASK));
 
 pub struct Scheduler<const C: usize> {
     tasks: [Option<Task>; C],

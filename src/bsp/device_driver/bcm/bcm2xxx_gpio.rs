@@ -27,15 +27,12 @@ register_bitfields! {
 
     // GPIO Function Select 1
     GPFSEL1 [
-        /// Pin 15
         FSEL15 OFFSET(15) NUMBITS(3) [
             Input = 0b000,
             Output = 0b001,
             AltFunc0 = 0b100  // PL011 UART RX
 
         ],
-
-        /// Pin 14
         FSEL14 OFFSET(12) NUMBITS(3) [
             Input = 0b000,
             Output = 0b001,
@@ -44,8 +41,6 @@ register_bitfields! {
     ],
 
     /// GPIO Pull-up/down Register
-    ///
-    /// BCM2837 only.
     GPPUD [
         /// Controls the actuation of the internal pull-up/down control line to ALL the GPIO pins.
         PUD OFFSET(0) NUMBITS(2) [
@@ -56,16 +51,11 @@ register_bitfields! {
     ],
 
     /// GPIO Pull-up/down Clock Register 0
-    ///
-    /// BCM2837 only.
     GPPUDCLK0 [
-        /// Pin 15
         PUDCLK15 OFFSET(15) NUMBITS(1) [
             NoEffect = 0,
             AssertClock = 1
         ],
-
-        /// Pin 14
         PUDCLK14 OFFSET(14) NUMBITS(1) [
             NoEffect = 0,
             AssertClock = 1

@@ -9,7 +9,8 @@ use crate::{
         sync::{InitStateLock, ReadWriteLock},
     },
     info,
-    print, println
+    print,
+    println,
 };
 
 #[derive(Clone, Debug)]
@@ -59,10 +60,9 @@ impl MappingRecordEntry {
 
 impl MappingRecord {
     pub const fn new() -> Self {
+        const DEFAULT: Option<MappingRecordEntry> = None;
         Self {
-            items: [
-                None, None, None, None, None, None, None, None, None, None, None, None,
-            ],
+            items: [DEFAULT; 12],
         }
     }
 

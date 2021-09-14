@@ -10,10 +10,10 @@ pub struct CpuContext {
 impl CpuContext {
     pub const fn zero() -> Self {
         Self {
-            registers: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            registers: [0; 10],
             fp: 0,
             sp: 0,
-            pc: 0
+            pc: 0,
         }
     }
 }
