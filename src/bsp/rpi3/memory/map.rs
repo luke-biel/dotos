@@ -17,5 +17,8 @@ pub mod mmio {
     pub const LOCAL_IC_START: Address<Physical> = Address::new(0x4000_0000);
     pub const LOCAL_IC_SIZE: usize = 0x100;
 
+    pub const TIMER_START: Address<Physical> = Address::new(0x3F00_3000);
+    pub const TIMER_SIZE: usize = 0x1c;
+
     pub const END: Address<Physical> = Address::new(0x4001_0000);
 }
