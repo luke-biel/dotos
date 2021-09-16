@@ -27,7 +27,7 @@ use crate::{
         memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
         statics,
         sync::{IRQSafeNullLock, Mutex},
-        time_manager::scheduling::{SchedulingManager, TickCallbackHandler},
+        time::scheduling::{SchedulingManager, TickCallbackHandler},
     },
 };
 
@@ -60,7 +60,7 @@ struct SystemTimerInner {
 }
 
 struct Callbacks {
-    callbacks: [Option<&'static (dyn TickCallbackHandler + Sync)>; 4],
+    items: [Option<&'static (dyn TickCallbackHandler + Sync)>; 4],
     callbacks_last: usize,
 }
 
@@ -107,7 +107,7 @@ impl SystemTimer {
             virt_mmio_start_addr: AtomicUsize::new(0),
 
             callbacks: IRQSafeNullLock::new(Callbacks {
-                callbacks: [DEFAULT_CALLBACK; 4],
+                items: [DEFAULT_CALLBACK; 4],
                 callbacks_last: 0,
             }),
 
@@ -158,10 +158,8 @@ impl IRQHandler for SystemTimer {
     fn handle(&self) -> Result<(), &'static str> {
         self.inner.map_locked(|inner| inner.handle_irq());
         self.callbacks.map_locked(|callbacks| {
-            for callback in callbacks.callbacks {
-                if let Some(callback) = callback {
-                    callback.handle()
-                }
+            for callback in callbacks.items.iter().flatten() {
+                callback.handle()
             }
         });
 
@@ -176,7 +174,7 @@ impl SchedulingManager for SystemTimer {
     ) -> Result<(), &'static str> {
         self.callbacks.map_locked(|callbacks| {
             if callbacks.callbacks_last < 4 {
-                callbacks.callbacks[callbacks.callbacks_last] = Some(handler);
+                callbacks.items[callbacks.callbacks_last] = Some(handler);
                 callbacks.callbacks_last += 1;
                 Ok(())
             } else {

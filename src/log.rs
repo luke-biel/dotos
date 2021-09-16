@@ -22,7 +22,7 @@ macro_rules! println {
 #[macro_export]
 macro_rules! log {
     ($log_kw:expr, $log_lv:expr, $s:expr) => {{
-        use crate::common::time_manager::clock::ClockManager as _;
+        use crate::common::time::clock::ClockManager as _;
 
         let ts = $crate::common::statics::CLOCK_TIMER.uptime();
         let sts = ts.subsec_micros();
@@ -39,7 +39,7 @@ macro_rules! log {
         };
     }};
     ($log_kw:expr, $log_lv:expr, $fs:expr, $($arg:tt)*) => {{
-        use crate::common::time_manager::clock::ClockManager as _;
+        use crate::common::time::clock::ClockManager as _;
 
         let ts = $crate::common::statics::CLOCK_TIMER.uptime();
         let sts = ts.subsec_micros();
@@ -68,7 +68,7 @@ macro_rules! trace {
 
 #[macro_export]
 macro_rules! debug {
-    ($s:expr) => { $crate::log!("D", 3, $s); };
+    ($s:expr) => { $crate::log!("D", 3, $s) };
     ($fs:expr, $($arg:tt)*) => {
         $crate::log!("D", 3, $fs, $($arg)*)
     };
@@ -76,7 +76,7 @@ macro_rules! debug {
 
 #[macro_export]
 macro_rules! info {
-    ($s:expr) => { $crate::log!("I", 2, $s); };
+    ($s:expr) => { $crate::log!("I", 2, $s) };
     ($fs:expr, $($arg:tt)*) => {
         $crate::log!("I", 2, $fs, $($arg)*)
     };
@@ -84,7 +84,7 @@ macro_rules! info {
 
 #[macro_export]
 macro_rules! warn {
-    ($s:expr) => { $crate::log!("W", 1, $s); };
+    ($s:expr) => { $crate::log!("W", 1, $s) };
     ($fs:expr, $($arg:tt)*) => {
         $crate::log!("W", 1, $fs, $($arg)*)
     };
@@ -92,7 +92,7 @@ macro_rules! warn {
 
 #[macro_export]
 macro_rules! error {
-    ($s:expr) => { $crate::log!("E", 0, $s); };
+    ($s:expr) => { $crate::log!("E", 0, $s) };
     ($fs:expr, $($arg:tt)*) => {
         $crate::log!("E", 0, $fs, $($arg)*)
     };

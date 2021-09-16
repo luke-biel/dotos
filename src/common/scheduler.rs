@@ -1,9 +1,8 @@
 use crate::{
     arch::arch_impl::task::CpuContext,
     common::{
-        sync::IRQSafeNullLock,
         task::{Task, TaskState},
-        time_manager::scheduling::TickCallbackHandler,
+        time::scheduling::TickCallbackHandler,
     },
 };
 

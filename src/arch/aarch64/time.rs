@@ -1,6 +1,6 @@
 use core::time::Duration;
 
-use crate::common::time_manager::clock::ClockManager;
+use crate::common::time::clock::ClockManager;
 
 const NS_IN_S: u64 = 1_000_000_000;
 

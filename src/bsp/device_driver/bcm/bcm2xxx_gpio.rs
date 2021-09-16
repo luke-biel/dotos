@@ -17,7 +17,7 @@ use crate::{
         memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
         statics::CLOCK_TIMER,
         sync::{IRQSafeNullLock, Mutex},
-        time_manager::clock::ClockManager,
+        time::clock::ClockManager,
     },
 };
 

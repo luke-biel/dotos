@@ -35,7 +35,7 @@ use crate::{
         state::KernelState,
         statics,
         sync::ReadWriteLock,
-        time_manager::scheduling::SchedulingManager,
+        time::scheduling::SchedulingManager,
     },
 };
 
@@ -67,7 +67,7 @@ unsafe fn kernel_init() -> ! {
         .register_irq_handlers()
         .expect("driver register_irq_handler");
 
-    statics::SYSTEM_TIMER_DRIVER.register_handler(&SCHEDULER);
+    statics::SYSTEM_TIMER_DRIVER.register_handler(&SCHEDULER).expect("register ticks for scheduler");
 
     local_irq_set_mask(false);
 

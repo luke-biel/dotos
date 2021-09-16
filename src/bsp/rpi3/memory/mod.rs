@@ -17,9 +17,6 @@ extern "Rust" {
 
     static __boot_core_stack_start: UnsafeCell<()>;
     static __boot_core_stack_ende: UnsafeCell<()>;
-
-    static __boot_core_stack_guard_page_start: UnsafeCell<()>;
-    static __boot_core_stack_guard_page_ende: UnsafeCell<()>;
 }
 
 fn bss_start() -> usize {
@@ -60,15 +57,4 @@ pub fn boot_core_stack_ende() -> Address<Virtual> {
 
 pub fn boot_core_stack_size() -> usize {
     unsafe { (__boot_core_stack_ende.get() as usize) - (__boot_core_stack_start.get() as usize) }
-}
-
-pub fn boot_core_stack_guard_page_start() -> Address<Virtual> {
-    Address::new(unsafe { __boot_core_stack_guard_page_start.get() as usize })
-}
-
-pub fn boot_core_stack_guard_page_size() -> usize {
-    unsafe {
-        (__boot_core_stack_guard_page_ende.get() as usize)
-            - (__boot_core_stack_guard_page_start.get() as usize)
-    }
 }

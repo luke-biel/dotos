@@ -214,6 +214,7 @@ impl<const NUM_TABLES: usize> FixedSizeTranslationTable<NUM_TABLES> {
     const L2_MMIO_START_INDEX: usize = NUM_TABLES - 1;
     const L3_MMIO_START_INDEX: usize = 8192 / 2;
 
+    #[allow(clippy::assertions_on_constants)]
     pub const fn new() -> Self {
         assert!(KernelGranule::SIZE == Granule64KB::SIZE);
         assert!(NUM_TABLES > 0);

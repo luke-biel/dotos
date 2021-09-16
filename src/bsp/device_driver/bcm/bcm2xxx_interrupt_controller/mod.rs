@@ -51,6 +51,8 @@ impl PeripheralIRQ {
 }
 
 #[derive(Copy, Clone)]
+#[allow(dead_code)]
+// TODO: When needed provide local IRQs
 pub enum IRQNumber {
     Local(LocalIRQ),
     Peripheral(PeripheralIRQ),
