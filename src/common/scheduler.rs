@@ -1,10 +1,9 @@
-use core::mem::{forget, transmute, MaybeUninit};
-
 use crate::{
     arch::arch_impl::task::CpuContext,
     common::{
         sync::IRQSafeNullLock,
         task::{Task, TaskState},
+        time_manager::scheduling::TickCallbackHandler,
     },
 };
 
@@ -16,8 +15,7 @@ pub const INIT_TASK: Task = Task {
     preempt_count: 0,
 };
 
-pub static SCHEDULER: IRQSafeNullLock<Scheduler<64>> =
-    IRQSafeNullLock::new(Scheduler::new().with(INIT_TASK));
+pub static SCHEDULER: Scheduler<64> = Scheduler::new().with(INIT_TASK);
 
 pub struct Scheduler<const C: usize> {
     tasks: [Option<Task>; C],
@@ -44,5 +42,11 @@ impl<const C: usize> Scheduler<C> {
         self.tasks[self.count] = Some(task);
         self.count += 1;
         self
+    }
+}
+
+impl<const C: usize> TickCallbackHandler for Scheduler<C> {
+    fn handle(&self) {
+        crate::info!("scheduling")
     }
 }

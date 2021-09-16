@@ -23,8 +23,7 @@ use crate::{
         memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
         serial_console,
         statics,
-        statics::KERNEL_TABLES,
-        sync::{IRQSafeNullLock, Mutex, ReadWriteLock},
+        sync::{IRQSafeNullLock, Mutex},
     },
 };
 

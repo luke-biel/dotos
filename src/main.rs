@@ -31,9 +31,11 @@ use crate::{
     common::{
         driver::DriverManager,
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
+        scheduler::SCHEDULER,
         state::KernelState,
         statics,
         sync::ReadWriteLock,
+        time_manager::scheduling::SchedulingManager,
     },
 };
 
@@ -64,6 +66,8 @@ unsafe fn kernel_init() -> ! {
     statics::BSP_DRIVER_MANAGER
         .register_irq_handlers()
         .expect("driver register_irq_handler");
+
+    statics::SYSTEM_TIMER_DRIVER.register_handler(&SCHEDULER);
 
     local_irq_set_mask(false);
 

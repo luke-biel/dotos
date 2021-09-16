@@ -15,9 +15,9 @@ use crate::{
     common::{
         driver::Driver,
         memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
-        statics::TIMER,
+        statics::CLOCK_TIMER,
         sync::{IRQSafeNullLock, Mutex},
-        time_manager::TimeManager,
+        time_manager::clock::ClockManager,
     },
 };
 
@@ -103,12 +103,12 @@ impl GpioInner {
         const DELAY: Duration = Duration::from_micros(100);
 
         self.registers.gppud.write(GPPUD::PUD::Off);
-        TIMER.sleep(DELAY);
+        CLOCK_TIMER.sleep(DELAY);
 
         self.registers
             .gppudclk0
             .write(GPPUDCLK0::PUDCLK15::AssertClock + GPPUDCLK0::PUDCLK14::AssertClock);
-        TIMER.sleep(DELAY);
+        CLOCK_TIMER.sleep(DELAY);
 
         self.registers.gppud.write(GPPUD::PUD::Off);
         self.registers.gppudclk0.set(0);

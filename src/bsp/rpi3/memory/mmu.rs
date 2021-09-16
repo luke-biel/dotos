@@ -7,25 +7,21 @@ use crate::{
         rx_size,
         rx_start,
     },
-    common::{
-        memory::{
-            mmu::{
-                descriptors::{
-                    AccessPermissions,
-                    Attributes,
-                    Execute,
-                    MemoryAttributes,
-                    PageSliceDescriptor,
-                },
-                map_kernel_pages_at,
-                AddressSpace,
-                TranslationGranule,
+    common::memory::{
+        mmu::{
+            descriptors::{
+                AccessPermissions,
+                Attributes,
+                Execute,
+                MemoryAttributes,
+                PageSliceDescriptor,
             },
-            Physical,
-            Virtual,
+            map_kernel_pages_at,
+            AddressSpace,
+            TranslationGranule,
         },
-        statics::KERNEL_TABLES,
-        sync::ReadWriteLock,
+        Physical,
+        Virtual,
     },
 };
 

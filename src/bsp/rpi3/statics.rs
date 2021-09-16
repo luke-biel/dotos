@@ -15,11 +15,12 @@ pub static INTERRUPT_CONTROLLER: InterruptController = unsafe {
         MMIODescriptor::new(mmio::PERIPHERAL_IC_START, mmio::PERIPHERAL_IC_SIZE),
     )
 };
-pub static SYSTEM_TIMER: SystemTimer = unsafe { SystemTimer::new(MMIODescriptor::new(mmio::TIMER_START, mmio::TIMER_SIZE)) };
+pub static SYSTEM_TIMER_DRIVER: SystemTimer =
+    unsafe { SystemTimer::new(MMIODescriptor::new(mmio::TIMER_START, mmio::TIMER_SIZE)) };
 
 pub static BSP_DRIVER_MANAGER: BSPDriverManager<2, 2> = BSPDriverManager {
     early_drivers: [&GPIO_DRIVER, &UART_DRIVER],
-    late_drivers: [&INTERRUPT_CONTROLLER, &SYSTEM_TIMER],
+    late_drivers: [&INTERRUPT_CONTROLLER, &SYSTEM_TIMER_DRIVER],
 };
 
 pub use self::UART_DRIVER as CONSOLE;
@@ -29,10 +30,10 @@ use crate::{
         bcm2xxx_gpio::GpioInner,
         bcm2xxx_interrupt_controller::InterruptController,
         bcm2xxx_pl011_uart::PL011UartInner,
+        bcm2xxx_system_timer::SystemTimer,
     },
-    common::{driver::Driver, memory::mmu::descriptors::MMIODescriptor},
+    common::memory::mmu::descriptors::MMIODescriptor,
 };
-use crate::bsp::device_driver::bcm::bcm2xxx_system_timer::SystemTimer;
 
 pub const LOG_LEVEL: usize = 4;
 
@@ -41,7 +42,7 @@ pub unsafe fn panic_console() -> impl fmt::Write {
     let mut uart = PL011UartInner::new(mmio::UART_START.addr());
 
     gpio.init(None).unwrap_or_else(|_| park());
-    uart.init(None);
+    uart.init(None).unwrap();
     gpio.map_pl011_uart();
 
     uart

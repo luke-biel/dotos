@@ -78,10 +78,6 @@ impl MMIODescriptor {
     pub const fn end_addr(&self) -> Address<Physical> {
         self.addr + (self.size - 1)
     }
-
-    pub const fn size(&self) -> usize {
-        self.size
-    }
 }
 
 impl From<MMIODescriptor> for PageSliceDescriptor<Physical> {
@@ -115,10 +111,6 @@ impl<A: AddressType> PageSliceDescriptor<A> {
         self.start.addr() as *const _
     }
 
-    pub fn iter(&self) -> PageSliceDescriptorIter<A> {
-        PageSliceDescriptorIter::new(self.first_page_ptr(), self.num_pages)
-    }
-
     pub fn num_pages(&self) -> usize {
         self.num_pages
     }
@@ -145,16 +137,6 @@ impl From<PageSliceDescriptor<Virtual>> for PageSliceDescriptor<Physical> {
         Self {
             start: Address::new(desc.start.addr()),
             num_pages: desc.num_pages,
-        }
-    }
-}
-
-impl<A: AddressType> PageSliceDescriptorIter<A> {
-    pub fn new(start: *const Page<A>, len: usize) -> Self {
-        Self {
-            ptr: start,
-            remaining: len,
-            len,
         }
     }
 }

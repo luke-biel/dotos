@@ -1,6 +1,6 @@
 use core::time::Duration;
 
-use crate::common::time_manager::TimeManager;
+use crate::common::time_manager::clock::ClockManager;
 
 const NS_IN_S: u64 = 1_000_000_000;
 
@@ -25,7 +25,7 @@ impl GenericTimer {
     }
 }
 
-impl TimeManager for GenericTimer {
+impl ClockManager for GenericTimer {
     fn resolution(&self) -> Duration {
         Duration::from_nanos(NS_IN_S / self.cntfrq_el0())
     }

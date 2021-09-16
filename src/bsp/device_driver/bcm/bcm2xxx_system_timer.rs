@@ -1,3 +1,6 @@
+use core::sync::atomic::{AtomicUsize, Ordering};
+
+use tock_registers::interfaces::{Readable, Writeable};
 /// TODO
 /// https://s-matyukevich.github.io/raspberry-pi-os/docs/lesson03/rpi-os.html
 /// https://github.com/s-matyukevich/raspberry-pi-os/blob/master/src/lesson03/include/peripherals/timer.h
@@ -7,18 +10,26 @@
 /// init SystemTime1 irq_handler from driver code +
 /// Create scaffolding for system time listeners
 /// Connect Scheduler to this
+use tock_registers::{
+    register_bitfields,
+    register_structs,
+    registers::{ReadOnly, ReadWrite},
+};
 
-use tock_registers::{register_structs, register_bitfields, registers::{ReadWrite, ReadOnly}};
-use crate::bsp::device_driver::WrappedPointer;
-use crate::common::memory::mmu::descriptors::MMIODescriptor;
-use crate::common::sync::{IRQSafeNullLock, Mutex};
-use tock_registers::interfaces::{Readable, Writeable};
-use crate::common::driver::Driver;
-use crate::common::memory::mmu::map_kernel_mmio;
-use core::sync::atomic::{AtomicUsize, Ordering};
-use crate::common::statics;
-use crate::common::exception::asynchronous::{IRQManager, IRQDescriptor, IRQHandler};
-use crate::bsp::device_driver::bcm::bcm2xxx_interrupt_controller::{IRQNumber, PeripheralIRQ};
+use crate::{
+    bsp::device_driver::{
+        bcm::bcm2xxx_interrupt_controller::{IRQNumber, PeripheralIRQ},
+        WrappedPointer,
+    },
+    common::{
+        driver::Driver,
+        exception::asynchronous::{IRQDescriptor, IRQHandler, IRQManager},
+        memory::mmu::{descriptors::MMIODescriptor, map_kernel_mmio},
+        statics,
+        sync::{IRQSafeNullLock, Mutex},
+        time_manager::scheduling::{SchedulingManager, TickCallbackHandler},
+    },
+};
 
 register_bitfields! {
     u32,
@@ -48,9 +59,15 @@ struct SystemTimerInner {
     registers: WrappedPointer<RegisterBlock>,
 }
 
+struct Callbacks {
+    callbacks: [Option<&'static (dyn TickCallbackHandler + Sync)>; 4],
+    callbacks_last: usize,
+}
+
 pub struct SystemTimer {
     descriptor: MMIODescriptor,
     virt_mmio_start_addr: AtomicUsize,
+    callbacks: IRQSafeNullLock<Callbacks>,
     inner: IRQSafeNullLock<SystemTimerInner>,
 }
 
@@ -77,7 +94,6 @@ impl SystemTimerInner {
         self.saved_timer_val += Self::INTERVAL;
         self.registers.timer_c1.set(self.saved_timer_val);
         self.registers.timer_cs.write(TimerCS::TIMER_CS_M1::SET);
-        crate::info!("Timer interrupt!");
     }
 }
 
@@ -85,10 +101,17 @@ impl SystemTimer {
     const IRQ_NUMBER: IRQNumber = IRQNumber::Peripheral(PeripheralIRQ::SystemTimer1);
 
     pub const unsafe fn new(descriptor: MMIODescriptor) -> Self {
+        const DEFAULT_CALLBACK: Option<&'static (dyn TickCallbackHandler + Sync)> = None;
         Self {
             descriptor,
             virt_mmio_start_addr: AtomicUsize::new(0),
-            inner: IRQSafeNullLock::new(SystemTimerInner::new(descriptor.start_addr().addr()))
+
+            callbacks: IRQSafeNullLock::new(Callbacks {
+                callbacks: [DEFAULT_CALLBACK; 4],
+                callbacks_last: 0,
+            }),
+
+            inner: IRQSafeNullLock::new(SystemTimerInner::new(descriptor.start_addr().addr())),
         }
     }
 }
@@ -108,10 +131,13 @@ impl Driver for SystemTimer {
     }
 
     fn register_irq_handler(&'static self) -> Result<(), &'static str> {
-        statics::INTERRUPT_CONTROLLER.register_handler(Self::IRQ_NUMBER, IRQDescriptor {
-            name: self.compat(),
-            handler: self
-        })?;
+        statics::INTERRUPT_CONTROLLER.register_handler(
+            Self::IRQ_NUMBER,
+            IRQDescriptor {
+                name: self.compat(),
+                handler: self,
+            },
+        )?;
         statics::INTERRUPT_CONTROLLER.enable(Self::IRQ_NUMBER);
 
         Ok(())
@@ -131,7 +157,31 @@ impl Driver for SystemTimer {
 impl IRQHandler for SystemTimer {
     fn handle(&self) -> Result<(), &'static str> {
         self.inner.map_locked(|inner| inner.handle_irq());
+        self.callbacks.map_locked(|callbacks| {
+            for callback in callbacks.callbacks {
+                if let Some(callback) = callback {
+                    callback.handle()
+                }
+            }
+        });
 
         Ok(())
+    }
+}
+
+impl SchedulingManager for SystemTimer {
+    fn register_handler(
+        &self,
+        handler: &'static (dyn TickCallbackHandler + Sync),
+    ) -> Result<(), &'static str> {
+        self.callbacks.map_locked(|callbacks| {
+            if callbacks.callbacks_last < 4 {
+                callbacks.callbacks[callbacks.callbacks_last] = Some(handler);
+                callbacks.callbacks_last += 1;
+                Ok(())
+            } else {
+                Err("couldn't register handler")
+            }
+        })
     }
 }

@@ -22,9 +22,9 @@ macro_rules! println {
 #[macro_export]
 macro_rules! log {
     ($log_kw:expr, $log_lv:expr, $s:expr) => {{
-        use crate::common::time_manager::TimeManager as _;
+        use crate::common::time_manager::clock::ClockManager as _;
 
-        let ts = $crate::common::statics::TIMER.uptime();
+        let ts = $crate::common::statics::CLOCK_TIMER.uptime();
         let sts = ts.subsec_micros();
 
         if $crate::common::statics::LOG_LEVEL >= $log_lv {
@@ -39,9 +39,9 @@ macro_rules! log {
         };
     }};
     ($log_kw:expr, $log_lv:expr, $fs:expr, $($arg:tt)*) => {{
-        use crate::common::time_manager::TimeManager as _;
+        use crate::common::time_manager::clock::ClockManager as _;
 
-        let ts = $crate::common::statics::TIMER.uptime();
+        let ts = $crate::common::statics::CLOCK_TIMER.uptime();
         let sts = ts.subsec_micros();
 
         if $crate::common::statics::LOG_LEVEL >= $log_lv {
