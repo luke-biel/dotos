@@ -61,7 +61,7 @@ impl<const C: usize> SchedulerInner<C> {
                 .max_by(|(_, t1), (_, t2)| t1.counter.cmp(&t2.counter));
 
             if let Some(max_task) = max {
-                break max_task.0
+                break max_task.0;
             } else {
                 for task in self.tasks.iter_mut() {
                     task.counter = (task.counter >> 1) + task.priority
@@ -91,7 +91,7 @@ impl<const C: usize> SchedulerInner<C> {
         self.current = next;
         let next = self.tasks.get(next).unwrap();
 
-        cpu_switch_to(last,  next);
+        cpu_switch_to(last, next);
     }
 }
 
