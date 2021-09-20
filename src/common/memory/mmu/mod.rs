@@ -129,7 +129,7 @@ pub fn map_kernel_mmio(
         addr
     } else {
         let vpages: PageSliceDescriptor<Virtual> =
-            KERNEL_TABLES.map_write(|tables| tables.next_page_slice(ppages.num_pages()))?;
+            KERNEL_TABLES.map_write(|tables| tables.next_mmio_page_slice(ppages.num_pages()))?;
 
         map_kernel_pages_unchecked(
             compat,
@@ -146,4 +146,10 @@ pub fn map_kernel_mmio(
     };
 
     Ok(addr + offset)
+}
+
+pub fn next_free_page() -> Result<Address<Virtual>, &'static str> {
+    Ok(KERNEL_TABLES
+        .map_write(|tables| tables.next_user_page_slice(1))?
+        .start_addr())
 }

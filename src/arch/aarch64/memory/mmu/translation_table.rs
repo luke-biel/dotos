@@ -9,8 +9,11 @@ use tock_registers::{
 use crate::{
     arch::arch_impl::memory::mmu::{mair, Granule512MB, Granule64KB},
     bsp::{
-        device::memory::{map::END, mmu::KernelAddrSpace},
-        rpi3::memory::mmu::KernelGranule,
+        device::memory::{
+            map::{user::LOW_MEMORY, END},
+            mmu::KernelAddrSpace,
+        },
+        rpi3::memory::{map::user::PAGE_COUNT, mmu::KernelGranule},
     },
     common::memory::{
         mmu::{
@@ -122,6 +125,7 @@ pub struct FixedSizeTranslationTable<const NUM_TABLES: usize> {
     pub lvl3: [[PageDescriptor; 8192]; NUM_TABLES],
     // 512 MB descriptors
     lvl2: [TableDescriptor; NUM_TABLES],
+    current_l3_user_index: usize,
     current_l3_mmio_index: usize,
     is_initialized: bool,
 }
@@ -223,6 +227,7 @@ impl<const NUM_TABLES: usize> FixedSizeTranslationTable<NUM_TABLES> {
             lvl3: [[PageDescriptor::new_zeroed(); 8192]; NUM_TABLES],
             lvl2: [TableDescriptor::new_zeroed(); NUM_TABLES],
             current_l3_mmio_index: 0,
+            current_l3_user_index: 0,
             is_initialized: false,
         }
     }
@@ -319,7 +324,33 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
         Ok(())
     }
 
-    fn next_page_slice(
+    fn next_mmio_page_slice(
+        &mut self,
+        num_pages: usize,
+    ) -> Result<PageSliceDescriptor<Virtual>, &'static str> {
+        if !self.is_initialized {
+            return Err("translation table is uninitialized");
+        }
+
+        if num_pages == 0 {
+            return Err("num_pages = 0");
+        }
+
+        // TODO: Put this magic number somewhere
+        if (self.current_l3_mmio_index + num_pages) > 8191 {
+            return Err("no more MMIO space");
+        }
+
+        let addr = Address::new(
+            (Self::L2_MMIO_START_INDEX << Granule512MB::SHIFT)
+                | (self.current_l3_mmio_index << Granule64KB::SHIFT),
+        );
+        self.current_l3_mmio_index += num_pages;
+
+        Ok(PageSliceDescriptor::from_addr(addr, num_pages))
+    }
+
+    fn next_user_page_slice(
         &mut self,
         num_pages: usize,
     ) -> Result<PageSliceDescriptor<Virtual>, &'static str> {
@@ -331,16 +362,13 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
             return Err("next_page_slice: num_pages = 0");
         }
 
-        // TODO: Put this magic number somewhere
-        if (self.current_l3_mmio_index + num_pages) > 8191 {
-            return Err("next_page_slice: No more MMIO space");
+        if (self.current_l3_user_index + num_pages) > PAGE_COUNT {
+            return Err("out of memory");
         }
 
-        let addr = Address::new(
-            (Self::L2_MMIO_START_INDEX << Granule512MB::SHIFT)
-                | (self.current_l3_mmio_index << Granule64KB::SHIFT),
-        );
-        self.current_l3_mmio_index += num_pages;
+        let addr =
+            Address::new(LOW_MEMORY.addr() + (self.current_l3_user_index * Granule64KB::SIZE));
+        self.current_l3_user_index += num_pages;
 
         Ok(PageSliceDescriptor::from_addr(addr, num_pages))
     }

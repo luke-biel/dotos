@@ -22,7 +22,21 @@ struct PendingIRQsIter {
 }
 
 #[derive(FromPrimitive, ToPrimitive, Copy, Clone)]
-pub enum LocalIRQ {}
+#[allow(clippy::upper_case_acronyms)]
+pub enum LocalIRQ {
+    CNTPSIRQ = 0,
+    CNTPNSIRQ = 1,
+    CNTHPIRQ = 2,
+    CNTVIRQ = 3,
+    Mailbox0 = 4,
+    Mailbox1 = 5,
+    Mailbox2 = 6,
+    Mailbox3 = 7,
+    GPUInterrupt = 8,       // Only one core set
+    PMUInterrupt = 9,       // Only one core set
+    AXIOutstandingInt = 10, // Only core 0
+    LocalTimer = 11,
+}
 
 #[derive(FromPrimitive, ToPrimitive, Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Display)]
 pub enum PeripheralIRQ {

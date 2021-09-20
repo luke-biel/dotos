@@ -13,7 +13,17 @@ pub struct Task {
 }
 
 #[repr(C)]
-#[derive(FromPrimitive, ToPrimitive, Copy, Clone, Debug)]
+#[derive(FromPrimitive, ToPrimitive, Copy, Clone, Debug, PartialEq)]
 pub enum TaskState {
     Running = 0,
+}
+
+impl Task {
+    pub fn store(&self) {
+        unsafe { self.context.store() }
+    }
+
+    pub fn restore(&self) {
+        unsafe { self.context.restore() }
+    }
 }

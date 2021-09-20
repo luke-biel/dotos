@@ -14,7 +14,11 @@ pub trait TranslationTable {
         ppages: PageSliceDescriptor<Physical>,
         attributes: Attributes,
     ) -> Result<(), &'static str>;
-    fn next_page_slice(
+    fn next_mmio_page_slice(
+        &mut self,
+        num_pages: usize,
+    ) -> Result<PageSliceDescriptor<Virtual>, &'static str>;
+    fn next_user_page_slice(
         &mut self,
         num_pages: usize,
     ) -> Result<PageSliceDescriptor<Virtual>, &'static str>;

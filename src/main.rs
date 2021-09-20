@@ -31,7 +31,7 @@ use crate::{
     common::{
         driver::DriverManager,
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
-        scheduler::SCHEDULER,
+        scheduler::{INIT_TASK, SCHEDULER},
         state::KernelState,
         statics,
         sync::ReadWriteLock,
@@ -67,7 +67,10 @@ unsafe fn kernel_init() -> ! {
         .register_irq_handlers()
         .expect("driver register_irq_handler");
 
-    statics::SYSTEM_TIMER_DRIVER.register_handler(&SCHEDULER).expect("register ticks for scheduler");
+    statics::SYSTEM_TIMER_DRIVER
+        .register_handler(&SCHEDULER)
+        .expect("register ticks for scheduler");
+    SCHEDULER.register_new_waiting_task(INIT_TASK);
 
     local_irq_set_mask(false);
 
