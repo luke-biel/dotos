@@ -108,3 +108,14 @@ __ex_restore:
 .type __ex_restore, function
 
 .global __exception_vector_addr
+
+return_from_fork:
+    bl schedule_tail
+    cbz x19, return_to_user
+    mov x0, x20
+    blr x19
+return_to_user:
+    bl disable_irq
+    eret
+
+.global return_from_fork

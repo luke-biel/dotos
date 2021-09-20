@@ -1,7 +1,12 @@
 use num_derive::{FromPrimitive, ToPrimitive};
 
-use crate::arch::arch_impl::task::CpuContext;
+use crate::{
+    arch::arch_impl::task::CpuContext,
+    bsp::device_driver::WrappedPointer,
+    common::memory::mmu::next_free_page,
+};
 
+#[derive(Default)]
 pub struct Task {
     pub context: CpuContext,
     pub state: TaskState,
@@ -16,6 +21,12 @@ pub struct Task {
 #[derive(FromPrimitive, ToPrimitive, Copy, Clone, Debug, PartialEq)]
 pub enum TaskState {
     Running = 0,
+}
+
+impl Default for TaskState {
+    fn default() -> Self {
+        Self::Running
+    }
 }
 
 impl Task {

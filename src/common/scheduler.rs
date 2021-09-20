@@ -1,11 +1,19 @@
+use core::cell::UnsafeCell;
+
 use crate::{
     arch::arch_impl::{cpu::exception::asynchronous::local_irq_set_mask, task::CpuContext},
     common::{
+        memory::mmu::next_free_page,
         sync::{IRQSafeNullLock, Mutex},
         task::{Task, TaskState},
         time::scheduling::TickCallbackHandler,
     },
 };
+use crate::arch::arch_impl::cpu::exception::return_from_fork;
+use crate::bsp::device_driver::WrappedPointer;
+use crate::common::memory::{Virtual, Address};
+
+pub const THREAD_SIZE: usize = 4096;
 
 pub const INIT_TASK: Task = Task {
     context: CpuContext::zero(),
@@ -45,7 +53,7 @@ impl<const C: usize> SchedulerInner<C> {
     }
 
     fn reschedule(&mut self) {
-        self.current().counter = 0;
+        (*self.current()).counter = 0;
         self.schedule()
     }
 
@@ -57,7 +65,7 @@ impl<const C: usize> SchedulerInner<C> {
                 .tasks
                 .iter()
                 .enumerate()
-                .filter(|(_, task)| task.state == TaskState::Running)
+                .filter(|(_, def)| def.state == TaskState::Running)
                 .max_by(|(_, t1), (_, t2)| t1.counter.cmp(&t2.counter));
 
             if let Some(max_task) = max {
@@ -75,7 +83,7 @@ impl<const C: usize> SchedulerInner<C> {
     }
 
     fn preempt_disable(&mut self) {
-        self.current().preempt_count += 1;
+        (&mut *self.current()).preempt_count += 1;
     }
 
     fn preempt_enable(&mut self) {
@@ -91,7 +99,7 @@ impl<const C: usize> SchedulerInner<C> {
         self.current = next;
         let next = self.tasks.get(next).unwrap();
 
-        cpu_switch_to(last, next);
+        cpu_switch_to(&last, &next);
     }
 }
 
@@ -104,6 +112,14 @@ impl<const C: usize> Scheduler<C> {
 
     pub fn register_new_waiting_task(&self, task: Task) {
         self.inner.map_locked(|inner| inner.push_task(task))
+    }
+
+    fn preempt_enable(&self) {
+        self.inner.map_locked(|inner| inner.preempt_enable());
+    }
+
+    fn preempt_disable(&self) {
+        self.inner.map_locked(|inner| inner.preempt_disable());
     }
 }
 
@@ -123,9 +139,33 @@ impl<const C: usize> TickCallbackHandler for Scheduler<C> {
     }
 }
 
-const THREAD_CPU_CONTEXT: usize = 0;
-
 fn cpu_switch_to(last: &Task, new: &Task) {
     last.store();
     new.restore();
+}
+
+pub unsafe fn spawn_process(f: fn() -> !) -> Result<(), &'static str> {
+    SCHEDULER.preempt_disable();
+    let mut task = Task::default();
+    let page = next_free_page()?;
+
+    task.priority = 10;
+    task.state = TaskState::Running;
+    task.counter = 10;
+    task.preempt_count = 1;
+
+
+    task.context.registers[0] = f as u64;
+    task.context.pc = return_from_fork.get() as u64;
+    task.context.sp = (page.addr() + THREAD_SIZE) as u64;
+
+    SCHEDULER.register_new_waiting_task(task);
+    SCHEDULER.preempt_enable();
+
+    Ok(())
+}
+
+#[no_mangle]
+fn schedule_tail() {
+    SCHEDULER.preempt_enable()
 }

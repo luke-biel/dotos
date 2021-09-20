@@ -11,6 +11,10 @@ mod handlers;
 // TODO: look whether I can replace this with rust code
 global_asm!(include_str!("exception.s"));
 
+extern "Rust" {
+    pub static return_from_fork: UnsafeCell<()>;
+}
+
 #[derive(Debug)]
 #[repr(C)]
 pub struct ExceptionContext {

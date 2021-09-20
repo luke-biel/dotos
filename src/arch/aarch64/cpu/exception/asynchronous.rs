@@ -52,6 +52,11 @@ pub fn local_irq_set_mask(mask: bool) {
     }
 }
 
+#[no_mangle]
+pub fn disable_irq() {
+    local_irq_set_mask(false);
+}
+
 pub fn local_irq_save() -> u64 {
     let daif: u64;
     unsafe { asm!("mrs {}, daif", out(reg) daif, options(nostack, nomem)) };

@@ -38,6 +38,8 @@ use crate::{
         time::scheduling::SchedulingManager,
     },
 };
+use crate::common::memory::mmu::next_free_page;
+use crate::common::scheduler::spawn_process;
 
 crate mod arch;
 mod bsp;
@@ -70,7 +72,6 @@ unsafe fn kernel_init() -> ! {
     statics::SYSTEM_TIMER_DRIVER
         .register_handler(&SCHEDULER)
         .expect("register ticks for scheduler");
-    SCHEDULER.register_new_waiting_task(INIT_TASK);
 
     local_irq_set_mask(false);
 
@@ -103,5 +104,12 @@ unsafe fn kernel_main() -> ! {
     info!("current privilege level: {}", current_privilege_level());
     info!("exception status: {}", get_mask_state());
 
+    spawn_process(test).unwrap();
+
     park()
+}
+
+fn test() -> ! {
+    crate::info!("process");
+    unsafe { park() }
 }
