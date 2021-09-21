@@ -9,7 +9,7 @@ use crate::{
             Address,
             Physical,
         },
-        sync::InitStateLock,
+        sync::IRQSafeNullLock,
     },
 };
 
@@ -22,8 +22,8 @@ pub type Granule512MB = TranslationGranule<{ 512 * 1024 * 1024 }>;
 pub type Granule64KB = TranslationGranule<{ 64 * 1024 }>;
 
 #[link_section = ".data"]
-pub static KERNEL_TABLES: InitStateLock<KernelTranslationTable> =
-    InitStateLock::new(KernelTranslationTable::new());
+pub static KERNEL_TABLES: IRQSafeNullLock<KernelTranslationTable> =
+    IRQSafeNullLock::new(KernelTranslationTable::new());
 
 impl<const SIZE: usize> AddressSpace<SIZE> {
     pub const fn arch_address_space_size_sanity_checks() {

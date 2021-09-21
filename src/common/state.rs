@@ -22,15 +22,15 @@ impl KernelInitManager {
 
     pub(crate) fn is_init(&self) -> bool {
         let state = self.state.load(Ordering::Acquire);
-        KernelState::from_u8(state).unwrap() == KernelState::Init
+        KernelState::from_u8(state).expect("KernelState::from_u8") == KernelState::Init
     }
 
     pub fn transition(&self, from: KernelState, to: KernelState) {
         if self
             .state
             .compare_exchange(
-                from.to_u8().unwrap(),
-                to.to_u8().unwrap(),
+                from.to_u8().expect("from to_u8"),
+                to.to_u8().expect("to to_u8"),
                 Ordering::Acquire,
                 Ordering::Relaxed,
             )

@@ -303,7 +303,7 @@ impl serial_console::Write for PL011Uart {
 impl serial_console::Read for PL011Uart {
     fn read_char(&self) -> char {
         self.inner
-            .map_locked(|inner| inner.read_char(true).unwrap())
+            .map_locked(|inner| inner.read_char(true).expect("inner read_char"))
     }
 
     fn clear(&self) {

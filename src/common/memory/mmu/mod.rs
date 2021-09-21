@@ -20,7 +20,7 @@ use crate::{
             Virtual,
         },
         statics::KERNEL_TABLES,
-        sync::ReadWriteLock,
+        sync::{Mutex, ReadWriteLock},
     },
     statics,
 };
@@ -75,7 +75,7 @@ pub fn map_kernel_pages_unchecked(
     attr: Attributes,
 ) -> Result<(), &'static str> {
     unsafe {
-        KERNEL_TABLES.map_write(|tables| tables.map_pages(vpages, ppages, attr))?;
+        KERNEL_TABLES.map_locked(|tables| tables.map_pages(vpages, ppages, attr))?;
     }
 
     kernel_add_record(name, vpages, ppages, attr);
@@ -100,7 +100,7 @@ pub fn map_kernel_pages_at(
     ppages: PageSliceDescriptor<Physical>,
     attr: Attributes,
 ) -> Result<(), &'static str> {
-    if KERNEL_TABLES.map_read(|tables| tables.is_page_slice_mmio(vpages)) {
+    if KERNEL_TABLES.map_locked(|tables| tables.is_page_slice_mmio(vpages)) {
         return Err("Cannot manualy map into mmio region");
     }
 
@@ -108,7 +108,7 @@ pub fn map_kernel_pages_at(
 }
 
 pub fn map_kernel_binary() -> Result<Address<Physical>, &'static str> {
-    let kernel_base_addr = statics::KERNEL_TABLES.map_write(|tables| {
+    let kernel_base_addr = statics::KERNEL_TABLES.map_locked(|tables| {
         tables.init();
         tables.base_addr()
     });
@@ -129,7 +129,7 @@ pub fn map_kernel_mmio(
         addr
     } else {
         let vpages: PageSliceDescriptor<Virtual> =
-            KERNEL_TABLES.map_write(|tables| tables.next_mmio_page_slice(ppages.num_pages()))?;
+            KERNEL_TABLES.map_locked(|tables| tables.next_mmio_page_slice(ppages.num_pages()))?;
 
         map_kernel_pages_unchecked(
             compat,
@@ -150,6 +150,6 @@ pub fn map_kernel_mmio(
 
 pub fn next_free_page() -> Result<Address<Virtual>, &'static str> {
     Ok(KERNEL_TABLES
-        .map_write(|tables| tables.next_user_page_slice(1))?
+        .map_locked(|tables| tables.next_user_page_slice(1))?
         .start_addr())
 }

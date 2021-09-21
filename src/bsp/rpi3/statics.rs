@@ -32,7 +32,7 @@ use crate::{
         bcm2xxx_pl011_uart::PL011UartInner,
         bcm2xxx_system_timer::SystemTimer,
     },
-    common::memory::mmu::descriptors::MMIODescriptor,
+    common::{driver::Driver, memory::mmu::descriptors::MMIODescriptor},
 };
 
 pub const LOG_LEVEL: usize = 4;
@@ -41,8 +41,11 @@ pub unsafe fn panic_console() -> impl fmt::Write {
     let mut gpio = GpioInner::new(mmio::GPIO_START.addr());
     let mut uart = PL011UartInner::new(mmio::UART_START.addr());
 
-    gpio.init(None).unwrap_or_else(|_| park());
-    uart.init(None).unwrap();
+    let gpio_addr = GPIO_DRIVER.virt_mmio_start_addr();
+    let uart_addr = UART_DRIVER.virt_mmio_start_addr();
+
+    gpio.init(gpio_addr).unwrap_or_else(|_| park());
+    uart.init(uart_addr).expect("panic uart init");
     gpio.map_pl011_uart();
 
     uart

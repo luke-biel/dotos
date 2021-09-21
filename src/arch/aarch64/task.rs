@@ -1,4 +1,4 @@
-#[derive(Default)]
+#[derive(Default, Debug)]
 #[repr(C)]
 pub struct CpuContext {
     // x19 - x28, task cannot save state of registers < x19 (they can change between jumps, per ARM spec)

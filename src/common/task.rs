@@ -1,12 +1,8 @@
 use num_derive::{FromPrimitive, ToPrimitive};
 
-use crate::{
-    arch::arch_impl::task::CpuContext,
-    bsp::device_driver::WrappedPointer,
-    common::memory::mmu::next_free_page,
-};
+use crate::arch::arch_impl::task::CpuContext;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Task {
     pub context: CpuContext,
     pub state: TaskState,

@@ -33,6 +33,6 @@ pub mod user {
     pub const LOW_MEMORY: Address<Physical> = Address::new(0x0020_0000);
     pub const HIGH_MEMORY: Address<Physical> = PERIPHERAL_IC_START;
 
-    pub const PAGING_MEMORY_SIZE: usize = HIGH_MEMORY.addr() - HIGH_MEMORY.addr();
+    pub const PAGING_MEMORY_SIZE: usize = HIGH_MEMORY.addr() - LOW_MEMORY.addr();
     pub const PAGE_COUNT: usize = PAGING_MEMORY_SIZE / Granule64KB::SIZE;
 }

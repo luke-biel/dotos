@@ -14,10 +14,6 @@ impl<T> WrappedPointer<T> {
             _phantom: PhantomData,
         }
     }
-
-    pub fn addr(&self) -> usize {
-        self.pointer
-    }
 }
 
 impl<T> Deref for WrappedPointer<T> {

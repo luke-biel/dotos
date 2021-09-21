@@ -70,7 +70,7 @@ pub fn local_irq_restore(state: u64) {
 pub fn get_mask_state() -> ExceptionStatus {
     let daif: u64;
     unsafe { asm!("mrs {}, daif", out(reg) daif, options(nostack, nomem)) };
-    let daif = Daif::from_bits(daif).unwrap();
+    let daif = Daif::from_bits(daif).expect("daif");
 
     ExceptionStatus {
         debug: daif.contains(Daif::DEBUG).into(),
@@ -84,6 +84,6 @@ impl Daif {
     pub fn state() -> Self {
         let daif: u64;
         unsafe { asm!("mrs {}, daif", out(reg) daif, options(nostack, nomem)) };
-        Daif::from_bits(daif).unwrap()
+        Daif::from_bits(daif).expect("daif")
     }
 }

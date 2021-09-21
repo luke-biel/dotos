@@ -23,23 +23,19 @@ use arch::aarch64::cpu::exception::current_privilege_level;
 use crate::{
     arch::{
         aarch64::cpu::exception::asynchronous::local_irq_set_mask,
-        arch_impl::cpu::{
-            exception::{asynchronous::get_mask_state, init_exception_handling},
-            park,
-        },
+        arch_impl::cpu::exception::{asynchronous::get_mask_state, init_exception_handling},
     },
     common::{
         driver::DriverManager,
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
-        scheduler::{INIT_TASK, SCHEDULER},
+        scheduler::{spawn_process, INIT_TASK, SCHEDULER},
         state::KernelState,
         statics,
         sync::ReadWriteLock,
         time::scheduling::SchedulingManager,
     },
 };
-use crate::common::memory::mmu::next_free_page;
-use crate::common::scheduler::spawn_process;
+use crate::bsp::device::memory::map::user::PAGE_COUNT;
 
 crate mod arch;
 mod bsp;
@@ -72,6 +68,7 @@ unsafe fn kernel_init() -> ! {
     statics::SYSTEM_TIMER_DRIVER
         .register_handler(&SCHEDULER)
         .expect("register ticks for scheduler");
+    SCHEDULER.register_new_waiting_task(INIT_TASK);
 
     local_irq_set_mask(false);
 
@@ -104,12 +101,13 @@ unsafe fn kernel_main() -> ! {
     info!("current privilege level: {}", current_privilege_level());
     info!("exception status: {}", get_mask_state());
 
-    spawn_process(test).unwrap();
+    spawn_process(test).expect("spawn test process");
 
-    park()
+    loop {
+        SCHEDULER.schedule()
+    }
 }
 
-fn test() -> ! {
+fn test() {
     crate::info!("process");
-    unsafe { park() }
 }

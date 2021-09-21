@@ -73,7 +73,7 @@ impl PeripheralInterruptController {
                 info!(
                     "    {}[{}] -> \"{}\"",
                     irq,
-                    irq.to_u64().unwrap(),
+                    irq.to_u64().expect("irq to_u64"),
                     descriptor.name
                 );
                 any = true;
@@ -94,7 +94,7 @@ impl IRQManager for PeripheralInterruptController {
         descriptor: IRQDescriptor,
     ) -> Result<(), &'static str> {
         self.handlers.map_write(|table| {
-            let no = irq.to_usize().unwrap();
+            let no = irq.to_usize().expect("irq to_usize");
             if table[no].is_some() {
                 return Err("Handler already registered");
             }
@@ -107,7 +107,7 @@ impl IRQManager for PeripheralInterruptController {
 
     fn enable(&self, irq: Self::IRQNumberT) {
         self.wo_registers.map_locked(|regs| {
-            let no = irq.to_u64().unwrap();
+            let no = irq.to_u64().expect("irq to_u64");
             let reg = if no < 32 {
                 &regs.enable1
             } else {
@@ -122,8 +122,8 @@ impl IRQManager for PeripheralInterruptController {
         self.handlers.map_read(|table| {
             self.pending()
                 .iter()
-                .for_each(|no| match table[no.to_usize().unwrap()] {
-                    None => panic!("No handler for IRQ {}", no.to_u64().unwrap()),
+                .for_each(|no| match table[no.to_usize().expect("no to_usize")] {
+                    None => panic!("No handler for IRQ {}", no.to_u64().expect("no to_u64")),
                     Some((_, ref d)) => d.handler.handle().expect("Handling IRQ"),
                 });
         })

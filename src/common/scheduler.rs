@@ -1,7 +1,11 @@
-use core::cell::UnsafeCell;
-
 use crate::{
-    arch::arch_impl::{cpu::exception::asynchronous::local_irq_set_mask, task::CpuContext},
+    arch::{
+        aarch64::memory::mmu::Granule64KB,
+        arch_impl::{
+            cpu::exception::{asynchronous::local_irq_set_mask, return_from_fork},
+            task::CpuContext,
+        },
+    },
     common::{
         memory::mmu::next_free_page,
         sync::{IRQSafeNullLock, Mutex},
@@ -9,11 +13,6 @@ use crate::{
         time::scheduling::TickCallbackHandler,
     },
 };
-use crate::arch::arch_impl::cpu::exception::return_from_fork;
-use crate::bsp::device_driver::WrappedPointer;
-use crate::common::memory::{Virtual, Address};
-
-pub const THREAD_SIZE: usize = 4096;
 
 pub const INIT_TASK: Task = Task {
     context: CpuContext::zero(),
@@ -48,13 +47,8 @@ impl<const C: usize> SchedulerInner<C> {
         }
     }
 
-    fn current(&mut self) -> &mut Task {
-        self.tasks.get_mut(self.current).unwrap()
-    }
-
-    fn reschedule(&mut self) {
-        (*self.current()).counter = 0;
-        self.schedule()
+    fn current(&mut self) -> Option<&mut Task> {
+        self.tasks.get_mut(self.current)
     }
 
     fn schedule(&mut self) {
@@ -83,11 +77,15 @@ impl<const C: usize> SchedulerInner<C> {
     }
 
     fn preempt_disable(&mut self) {
-        (&mut *self.current()).preempt_count += 1;
+        if let Some(current) = self.current() {
+            current.preempt_count += 1;
+        }
     }
 
     fn preempt_enable(&mut self) {
-        self.current().preempt_count -= 1;
+        if let Some(current) = self.current() {
+            current.preempt_count -= 1;
+        }
     }
 
     fn switch_to(&mut self, next: usize) {
@@ -95,11 +93,11 @@ impl<const C: usize> SchedulerInner<C> {
             return;
         }
 
-        let last = self.tasks.get(self.current).unwrap();
+        let last = self.tasks.get(self.current).expect("last");
         self.current = next;
-        let next = self.tasks.get(next).unwrap();
+        let next = self.tasks.get(next).expect("next");
 
-        cpu_switch_to(&last, &next);
+        cpu_switch_to(last, next);
     }
 }
 
@@ -121,13 +119,15 @@ impl<const C: usize> Scheduler<C> {
     fn preempt_disable(&self) {
         self.inner.map_locked(|inner| inner.preempt_disable());
     }
-}
 
-impl<const C: usize> TickCallbackHandler for Scheduler<C> {
-    fn handle(&self) {
+    pub(crate) fn schedule(&self) {
         self.inner.map_locked(|inner| {
-            let current = inner.current();
-            current.counter = current.counter.checked_sub(1).unwrap_or(0);
+            let current = if let Some(current) = inner.current() {
+                current
+            } else {
+                return;
+            };
+            current.counter = current.counter.saturating_sub(1);
             if current.counter > 0 || current.preempt_count > 0 {
                 return;
             }
@@ -139,12 +139,18 @@ impl<const C: usize> TickCallbackHandler for Scheduler<C> {
     }
 }
 
+impl<const C: usize> TickCallbackHandler for Scheduler<C> {
+    fn handle(&self) {
+        self.schedule()
+    }
+}
+
 fn cpu_switch_to(last: &Task, new: &Task) {
     last.store();
     new.restore();
 }
 
-pub unsafe fn spawn_process(f: fn() -> !) -> Result<(), &'static str> {
+pub unsafe fn spawn_process(f: fn()) -> Result<(), &'static str> {
     SCHEDULER.preempt_disable();
     let mut task = Task::default();
     let page = next_free_page()?;
@@ -154,10 +160,9 @@ pub unsafe fn spawn_process(f: fn() -> !) -> Result<(), &'static str> {
     task.counter = 10;
     task.preempt_count = 1;
 
-
-    task.context.registers[0] = f as u64;
+    task.context.registers[0] = f as u64; // x19
     task.context.pc = return_from_fork.get() as u64;
-    task.context.sp = (page.addr() + THREAD_SIZE) as u64;
+    task.context.sp = (page.addr() + Granule64KB::SIZE) as u64;
 
     SCHEDULER.register_new_waiting_task(task);
     SCHEDULER.preempt_enable();

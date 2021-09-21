@@ -308,7 +308,7 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
             return Ok(());
         }
 
-        if p.last().unwrap().addr() >= END.addr() {
+        if p.last().expect("p last").addr() >= END.addr() {
             return Err("map_pages: Tried to map outside address space");
         }
 
