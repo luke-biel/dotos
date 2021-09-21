@@ -35,7 +35,6 @@ use crate::{
         time::scheduling::SchedulingManager,
     },
 };
-use crate::bsp::device::memory::map::user::PAGE_COUNT;
 
 crate mod arch;
 mod bsp;

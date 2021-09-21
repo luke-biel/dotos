@@ -160,7 +160,7 @@ pub unsafe fn spawn_process(f: fn()) -> Result<(), &'static str> {
     task.counter = 10;
     task.preempt_count = 1;
 
-    task.context.registers[0] = f as u64; // x19
+    task.context.registers[0] = f as usize as u64; // x19
     task.context.pc = return_from_fork.get() as u64;
     task.context.sp = (page.addr() + Granule64KB::SIZE) as u64;
 

@@ -20,7 +20,7 @@ use crate::{
             Virtual,
         },
         statics::KERNEL_TABLES,
-        sync::{Mutex, ReadWriteLock},
+        sync::Mutex,
     },
     statics,
 };
