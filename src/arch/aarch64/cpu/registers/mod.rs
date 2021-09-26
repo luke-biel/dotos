@@ -1,6 +1,8 @@
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 
+mod esr_el1;
+
 const CORE_ID_MASK: usize = 0b11;
 
 #[derive(PartialEq, FromPrimitive)]
