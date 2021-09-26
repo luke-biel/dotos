@@ -21,18 +21,25 @@ pub struct ExceptionContext {
     registers: [u64; 30],
     link_register: u64,
     elr_el1: u64,
-    spsr_el1: u64,
+    spsr_el1: u32,
 }
 
 impl fmt::Display for ExceptionContext {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f, "registers:")?;
+        writeln!(f, "REGISTERS:")?;
         for i in 0..30 {
             writeln!(f, "    x{} = 0x{:0x}", i, self.registers[i])?;
         }
-        writeln!(f, "link_register: 0x{:0x}", self.link_register)?;
-        writeln!(f, "elr_el1: 0x{:0x}", self.elr_el1)?;
-        writeln!(f, "spsr_el1: 0x{:0x}", self.spsr_el1)
+        writeln!(f, "LR:       0x{:0x}", self.link_register)?;
+        writeln!(f, "ELR_EL1:  0x{:0x}", self.elr_el1)?;
+        writeln!(
+            f,
+            "SPSR_EL1: 0b{:08b}_{:08b}_{:08b}_{:08b}",
+            self.spsr_el1 >> 24 & 0xff,
+            self.spsr_el1 >> 16 & 0xff,
+            self.spsr_el1 >> 8 & 0xff,
+            self.spsr_el1 & 0xff
+        )
     }
 }
 

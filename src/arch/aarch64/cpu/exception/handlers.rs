@@ -1,5 +1,5 @@
 use crate::{
-    arch::arch_impl::cpu::exception::ExceptionContext,
+    arch::arch_impl::cpu::{exception::ExceptionContext, registers::esr_el1::EsrEl1},
     common::{
         exception::asynchronous::{IRQContext, IRQManager},
         statics,
@@ -9,11 +9,10 @@ use crate::{
 unsafe fn default_handler(kind: &'static str, e: &mut ExceptionContext) {
     let far_el1: u64;
     asm!("mrs {}, far_el1", out(reg) far_el1, options(nostack, nomem));
-    let esr_el1: u64;
-    asm!("mrs {}, esr_el1", out(reg) esr_el1, options(nostack, nomem));
+    let esr_el1 = EsrEl1::fetch();
     panic!(
-        "CPU Exception `{}`\nfar_el1: {:#018x}\nesr_el1: 0x{:x}\n{}",
-        kind, far_el1, esr_el1, e
+        "CPU Exception `{}`\n{}FAR_EL1:  {:#018x}\nESR_EL1:\n{}",
+        kind, e, far_el1, esr_el1,
     )
 }
 

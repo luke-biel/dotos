@@ -23,8 +23,12 @@ use arch::aarch64::cpu::exception::current_privilege_level;
 use crate::{
     arch::{
         aarch64::cpu::exception::asynchronous::local_irq_set_mask,
-        arch_impl::cpu::exception::{asynchronous::get_mask_state, init_exception_handling},
+        arch_impl::cpu::{
+            exception::{asynchronous::get_mask_state, init_exception_handling},
+            park,
+        },
     },
+    bsp::device_driver::WrappedPointer,
     common::{
         driver::DriverManager,
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
@@ -67,7 +71,7 @@ unsafe fn kernel_init() -> ! {
     statics::SYSTEM_TIMER_DRIVER
         .register_handler(&SCHEDULER)
         .expect("register ticks for scheduler");
-    SCHEDULER.register_new_waiting_task(INIT_TASK);
+    SCHEDULER.register_new_waiting_task(WrappedPointer::new(INIT_TASK as *const _ as usize));
 
     local_irq_set_mask(false);
 
@@ -103,10 +107,12 @@ unsafe fn kernel_main() -> ! {
     spawn_process(test).expect("spawn test process");
 
     loop {
-        SCHEDULER.schedule()
+        park()
     }
 }
 
 fn test() {
-    crate::info!("process");
+    let x = 0;
+    let y = x + 2;
+    crate::info!("process {}", y);
 }

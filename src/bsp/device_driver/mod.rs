@@ -1,4 +1,7 @@
-use core::{marker::PhantomData, ops::Deref};
+use core::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
 
 pub mod bcm;
 
@@ -21,5 +24,11 @@ impl<T> Deref for WrappedPointer<T> {
 
     fn deref(&self) -> &Self::Target {
         unsafe { &*(self.pointer as *const _) }
+    }
+}
+
+impl<T> DerefMut for WrappedPointer<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *(self.pointer as *mut _) }
     }
 }

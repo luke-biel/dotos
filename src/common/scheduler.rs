@@ -6,6 +6,7 @@ use crate::{
             task::CpuContext,
         },
     },
+    bsp::device_driver::WrappedPointer,
     common::{
         memory::mmu::next_free_page,
         sync::{IRQSafeNullLock, Mutex},
@@ -14,7 +15,7 @@ use crate::{
     },
 };
 
-pub const INIT_TASK: Task = Task {
+pub const INIT_TASK: &Task = &Task {
     context: CpuContext::zero(),
     state: TaskState::Running,
     counter: 0,
@@ -25,7 +26,7 @@ pub const INIT_TASK: Task = Task {
 pub static SCHEDULER: Scheduler<64> = Scheduler::new();
 
 struct SchedulerInner<const C: usize> {
-    tasks: heapless::Vec<Task, C>,
+    tasks: heapless::Vec<WrappedPointer<Task>, C>,
     current: usize,
 }
 
@@ -41,13 +42,13 @@ impl<const C: usize> SchedulerInner<C> {
         }
     }
 
-    fn push_task(&mut self, task: Task) {
+    fn push_task(&mut self, task: WrappedPointer<Task>) {
         if self.tasks.push(task).is_err() {
             panic!("task cache is full")
         }
     }
 
-    fn current(&mut self) -> Option<&mut Task> {
+    fn current(&mut self) -> Option<&mut WrappedPointer<Task>> {
         self.tasks.get_mut(self.current)
     }
 
@@ -108,7 +109,7 @@ impl<const C: usize> Scheduler<C> {
         }
     }
 
-    pub fn register_new_waiting_task(&self, task: Task) {
+    pub fn register_new_waiting_task(&self, task: WrappedPointer<Task>) {
         self.inner.map_locked(|inner| inner.push_task(task))
     }
 
@@ -152,8 +153,8 @@ fn cpu_switch_to(last: &Task, new: &Task) {
 
 pub unsafe fn spawn_process(f: fn()) -> Result<(), &'static str> {
     SCHEDULER.preempt_disable();
-    let mut task = Task::default();
     let page = next_free_page()?;
+    let mut task: WrappedPointer<Task> = WrappedPointer::new(page.addr());
 
     task.priority = 10;
     task.state = TaskState::Running;

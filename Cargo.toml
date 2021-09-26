@@ -17,5 +17,5 @@ heapless = "0.7.5"
 bitaccess = "0.3.0"
 
 [profile.release]
-# debug = true
+debug = true
 opt-level = 2
