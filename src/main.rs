@@ -17,7 +17,9 @@
 #![feature(const_for)]
 #![feature(const_mut_refs)]
 #![feature(const_maybe_uninit_write)]
+#![feature(once_cell)]
 
+use core::intrinsics::volatile_load;
 use arch::aarch64::cpu::exception::current_privilege_level;
 
 use crate::{
@@ -28,11 +30,10 @@ use crate::{
             park,
         },
     },
-    bsp::device_driver::WrappedPointer,
     common::{
         driver::DriverManager,
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
-        scheduler::{spawn_process, INIT_TASK, SCHEDULER},
+        scheduler::{spawn_process, SCHEDULER},
         state::KernelState,
         statics,
         sync::ReadWriteLock,
@@ -71,7 +72,6 @@ unsafe fn kernel_init() -> ! {
     statics::SYSTEM_TIMER_DRIVER
         .register_handler(&SCHEDULER)
         .expect("register ticks for scheduler");
-    SCHEDULER.register_new_waiting_task(WrappedPointer::new(INIT_TASK as *const _ as usize));
 
     local_irq_set_mask(false);
 
@@ -104,15 +104,24 @@ unsafe fn kernel_main() -> ! {
     info!("current privilege level: {}", current_privilege_level());
     info!("exception status: {}", get_mask_state());
 
-    spawn_process(test).expect("spawn test process");
+    spawn_process(test1).expect("spawn test process");
+    spawn_process(test2).expect("spawn test process");
 
     loop {
         park()
     }
 }
 
-fn test() {
-    let x = 0;
-    let y = x + 2;
+fn test1() {
+    let x = 1;
+    let val = unsafe { volatile_load(&x as *const _) };
+    let y = val + 2;
+    crate::info!("process {}", y);
+}
+
+fn test2() {
+    let x = 2;
+    let val = unsafe { volatile_load(&x as *const _) };
+    let y = val + 2;
     crate::info!("process {}", y);
 }

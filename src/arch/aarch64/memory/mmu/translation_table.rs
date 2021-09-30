@@ -370,6 +370,8 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
             Address::new(LOW_MEMORY.addr() + (self.current_l3_user_index * Granule64KB::SIZE));
         self.current_l3_user_index += num_pages;
 
+        crate::info!("registered {} user page(s) at {}", num_pages, addr);
+
         Ok(PageSliceDescriptor::from_addr(addr, num_pages))
     }
 

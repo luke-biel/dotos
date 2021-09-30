@@ -15,13 +15,13 @@ use crate::{
     },
 };
 
-pub const INIT_TASK: &Task = &Task {
-    context: CpuContext::zero(),
-    state: TaskState::Running,
-    counter: 0,
-    priority: 1,
-    preempt_count: 0,
-};
+// pub static INIT_TASK: Task = Task {
+//     context: CpuContext::zero(),
+//     state: TaskState::Running,
+//     counter: 0,
+//     priority: 1,
+//     preempt_count: 0,
+// };
 
 pub static SCHEDULER: Scheduler<64> = Scheduler::new();
 
@@ -147,8 +147,7 @@ impl<const C: usize> TickCallbackHandler for Scheduler<C> {
 }
 
 fn cpu_switch_to(last: &Task, new: &Task) {
-    last.store();
-    new.restore();
+    unsafe { Task::cpu_switch_to(last, new) }
 }
 
 pub unsafe fn spawn_process(f: fn()) -> Result<(), &'static str> {

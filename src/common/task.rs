@@ -1,8 +1,9 @@
 use num_derive::{FromPrimitive, ToPrimitive};
 
-use crate::arch::arch_impl::task::CpuContext;
+use crate::arch::arch_impl::task::{cpu_switch_to, CpuContext};
 
 #[derive(Default, Debug)]
+#[repr(C)]
 pub struct Task {
     pub context: CpuContext,
     pub state: TaskState,
@@ -13,8 +14,8 @@ pub struct Task {
     pub preempt_count: u64,
 }
 
-#[repr(C)]
 #[derive(FromPrimitive, ToPrimitive, Copy, Clone, Debug, PartialEq)]
+#[repr(C)]
 pub enum TaskState {
     Running = 0,
 }
@@ -26,11 +27,7 @@ impl Default for TaskState {
 }
 
 impl Task {
-    pub fn store(&self) {
-        unsafe { self.context.store() }
-    }
-
-    pub fn restore(&self) {
-        unsafe { self.context.restore() }
+    pub unsafe fn cpu_switch_to(prev: &Task, next: &Task) {
+        cpu_switch_to(prev as *const _, next as *const _)
     }
 }
