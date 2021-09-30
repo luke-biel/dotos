@@ -20,6 +20,7 @@
 #![feature(once_cell)]
 
 use core::intrinsics::volatile_load;
+use core::time::Duration;
 
 use arch::aarch64::cpu::exception::current_privilege_level;
 
@@ -41,6 +42,8 @@ use crate::{
         time::scheduling::SchedulingManager,
     },
 };
+use crate::common::statics::CLOCK_TIMER;
+use crate::common::time::clock::ClockManager;
 
 crate mod arch;
 mod bsp;
@@ -105,40 +108,27 @@ unsafe fn kernel_main() -> ! {
     info!("current privilege level: {}", current_privilege_level());
     info!("exception status: {}", get_mask_state());
 
+    spawn_process(|| {}).expect("spawn INIT process");
+
     spawn_process(test1).expect("spawn test process");
     spawn_process(test2).expect("spawn test process");
-    spawn_process(test3).expect("spawn test process");
     loop {
         park()
     }
 }
 
 fn test1() {
-    let x = 1;
-    let val = unsafe { volatile_load(&x as *const _) };
-    let y = val + 2;
-    crate::info!("process {}", y);
-    unsafe {
-        park();
+    let mut x = 1;
+    loop {
+        crate::info!("process 1) {}", x);
+        x += 1;
     }
 }
 
 fn test2() {
-    let x = 2;
-    let val = unsafe { volatile_load(&x as *const _) };
-    let y = val + 2;
-    crate::info!("process {}", y);
-    unsafe {
-        park();
-    }
-}
-
-fn test3() {
-    let x = 3;
-    let val = unsafe { volatile_load(&x as *const _) };
-    let y = val + 2;
-    crate::info!("process {}", y);
-    unsafe {
-        park();
+    let mut x = 1;
+    loop {
+        crate::info!("process 2) {}", x);
+        x += 1;
     }
 }
