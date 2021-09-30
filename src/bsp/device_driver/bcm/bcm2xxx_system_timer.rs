@@ -72,7 +72,7 @@ pub struct SystemTimer {
 }
 
 impl SystemTimerInner {
-    const INTERVAL: u32 = 200_000;
+    const INTERVAL: u32 = 1_000;
 
     pub const unsafe fn new(addr: usize) -> Self {
         Self {

@@ -20,6 +20,7 @@
 #![feature(once_cell)]
 
 use core::intrinsics::volatile_load;
+
 use arch::aarch64::cpu::exception::current_privilege_level;
 
 use crate::{
@@ -106,7 +107,7 @@ unsafe fn kernel_main() -> ! {
 
     spawn_process(test1).expect("spawn test process");
     spawn_process(test2).expect("spawn test process");
-
+    spawn_process(test3).expect("spawn test process");
     loop {
         park()
     }
@@ -117,6 +118,9 @@ fn test1() {
     let val = unsafe { volatile_load(&x as *const _) };
     let y = val + 2;
     crate::info!("process {}", y);
+    unsafe {
+        park();
+    }
 }
 
 fn test2() {
@@ -124,4 +128,17 @@ fn test2() {
     let val = unsafe { volatile_load(&x as *const _) };
     let y = val + 2;
     crate::info!("process {}", y);
+    unsafe {
+        park();
+    }
+}
+
+fn test3() {
+    let x = 3;
+    let val = unsafe { volatile_load(&x as *const _) };
+    let y = val + 2;
+    crate::info!("process {}", y);
+    unsafe {
+        park();
+    }
 }

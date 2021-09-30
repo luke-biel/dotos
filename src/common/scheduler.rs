@@ -1,10 +1,7 @@
 use crate::{
     arch::{
         aarch64::memory::mmu::Granule64KB,
-        arch_impl::{
-            cpu::exception::{asynchronous::local_irq_set_mask, return_from_fork},
-            task::CpuContext,
-        },
+        arch_impl::cpu::exception::{asynchronous::local_irq_set_mask, return_from_fork},
     },
     bsp::device_driver::WrappedPointer,
     common::{

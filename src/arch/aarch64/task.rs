@@ -10,16 +10,16 @@ pub struct CpuContext {
     pub pc: u64,
 }
 
-impl CpuContext {
-    pub const fn zero() -> Self {
-        Self {
-            registers: [0; 10],
-            fp: 0,
-            sp: 0,
-            pc: 0,
-        }
-    }
-}
+// impl CpuContext {
+//     pub const fn zero() -> Self {
+//         Self {
+//             registers: [0; 10],
+//             fp: 0,
+//             sp: 0,
+//             pc: 0,
+//         }
+//     }
+// }
 
 global_asm!(include_str!("task.s"));
 
