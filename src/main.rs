@@ -90,11 +90,13 @@ unsafe fn kernel_main() -> ! {
     );
     info!("build time: {}", env!("BUILD_DATE"));
     info!("git head: {}", env!("GIT_HASH"));
-    LOG_LEVEL = option_env!("LOG_LEVEL")
+    if let Some(log_level) = option_env!("LOG_LEVEL")
         .map(|val| usize::from_str(val))
         .transpose()
         .expect("parse LOG_LEVEL value")
-        .unwrap_or(2);
+    {
+        LOG_LEVEL = log_level;
+    }
 
     statics::BSP_DRIVER_MANAGER.print_status();
     statics::INTERRUPT_CONTROLLER.print_status();
