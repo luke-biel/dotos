@@ -20,6 +20,7 @@
 #![feature(once_cell)]
 
 use core::str::FromStr;
+
 use arch::aarch64::cpu::exception::current_privilege_level;
 
 use crate::{
@@ -36,11 +37,11 @@ use crate::{
         scheduler::{spawn_process, SCHEDULER},
         state::KernelState,
         statics,
+        statics::LOG_LEVEL,
         sync::ReadWriteLock,
         time::scheduling::SchedulingManager,
     },
 };
-use crate::common::statics::LOG_LEVEL;
 
 crate mod arch;
 mod bsp;
@@ -89,7 +90,11 @@ unsafe fn kernel_main() -> ! {
     );
     info!("build time: {}", env!("BUILD_DATE"));
     info!("git head: {}", env!("GIT_HASH"));
-    LOG_LEVEL = option_env!("LOG_LEVEL").map(|val| usize::from_str(val)).transpose().expect("parse LOG_LEVEL value").unwrap_or(2);
+    LOG_LEVEL = option_env!("LOG_LEVEL")
+        .map(|val| usize::from_str(val))
+        .transpose()
+        .expect("parse LOG_LEVEL value")
+        .unwrap_or(2);
 
     statics::BSP_DRIVER_MANAGER.print_status();
     statics::INTERRUPT_CONTROLLER.print_status();
