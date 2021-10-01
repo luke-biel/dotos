@@ -77,6 +77,8 @@ unsafe fn kernel_init() -> ! {
 
     statics::STATE_MANAGER.transition(KernelState::Init, KernelState::SingleCoreRun);
 
+    init_logging();
+
     kernel_main()
 }
 
@@ -88,7 +90,6 @@ unsafe fn kernel_main() -> ! {
     );
     info!("build time: {}", env!("BUILD_DATE"));
     info!("git head: {}", env!("GIT_HASH"));
-    init_logging();
 
     statics::BSP_DRIVER_MANAGER.print_status();
     statics::INTERRUPT_CONTROLLER.print_status();
