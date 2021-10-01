@@ -1,4 +1,5 @@
 use core::{
+    fmt,
     marker::PhantomData,
     ops::{Deref, DerefMut},
 };
@@ -16,6 +17,15 @@ impl<T> WrappedPointer<T> {
             pointer,
             _phantom: PhantomData,
         }
+    }
+}
+
+impl<T> fmt::Debug for WrappedPointer<T>
+where
+    T: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.deref())
     }
 }
 

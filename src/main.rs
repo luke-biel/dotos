@@ -19,8 +19,7 @@
 #![feature(const_maybe_uninit_write)]
 #![feature(once_cell)]
 
-use core::intrinsics::volatile_load;
-use core::time::Duration;
+use core::{intrinsics::volatile_load, time::Duration};
 
 use arch::aarch64::cpu::exception::current_privilege_level;
 
@@ -29,6 +28,7 @@ use crate::{
         aarch64::cpu::exception::asynchronous::local_irq_set_mask,
         arch_impl::cpu::{
             exception::{asynchronous::get_mask_state, init_exception_handling},
+            instructions::wfe,
             park,
         },
     },
@@ -38,12 +38,11 @@ use crate::{
         scheduler::{spawn_process, SCHEDULER},
         state::KernelState,
         statics,
+        statics::CLOCK_TIMER,
         sync::ReadWriteLock,
-        time::scheduling::SchedulingManager,
+        time::{clock::ClockManager, scheduling::SchedulingManager},
     },
 };
-use crate::common::statics::CLOCK_TIMER;
-use crate::common::time::clock::ClockManager;
 
 crate mod arch;
 mod bsp;
@@ -108,27 +107,39 @@ unsafe fn kernel_main() -> ! {
     info!("current privilege level: {}", current_privilege_level());
     info!("exception status: {}", get_mask_state());
 
-    spawn_process(|| {}).expect("spawn INIT process");
+    spawn_process(
+        || loop {
+            SCHEDULER.schedule()
+        },
+        20,
+    )
+    .expect("spawn INIT process");
 
-    spawn_process(test1).expect("spawn test process");
-    spawn_process(test2).expect("spawn test process");
+    spawn_process(test1, 10).expect("spawn test process");
+    spawn_process(test2, 10).expect("spawn test process");
     loop {
         park()
     }
 }
 
 fn test1() {
-    let mut x = 1;
+    let mut j = 0;
     loop {
-        crate::info!("process 1) {}", x);
-        x += 1;
+        for i in 1..200 {
+            crate::trace!("process 1.{}) {}", j, i);
+        }
+        j += 1;
+        unsafe { wfe() }
     }
 }
 
 fn test2() {
-    let mut x = 1;
+    let mut j = 0;
     loop {
-        crate::info!("process 2) {}", x);
-        x += 1;
+        for i in 1..200 {
+            crate::trace!("process 2.{}) {}", j, i);
+        }
+        j += 1;
+        unsafe { wfe() }
     }
 }

@@ -60,11 +60,12 @@ impl<const C: usize> SchedulerInner<C> {
                 .filter(|(_, def)| def.state == TaskState::Running)
                 .max_by(|(_, t1), (_, t2)| t1.counter.cmp(&t2.counter));
 
-            if let Some(max_task) = max {
-                break max_task.0;
-            } else {
-                for task in self.tasks.iter_mut() {
-                    task.counter = (task.counter >> 1) + task.priority
+            match max {
+                Some((idx, ptr)) if ptr.counter > 0 => break idx,
+                _ => {
+                    for task in self.tasks.iter_mut() {
+                        task.counter = (task.counter >> 1) + task.priority
+                    }
                 }
             }
         };
@@ -90,6 +91,8 @@ impl<const C: usize> SchedulerInner<C> {
         if self.current == next {
             return;
         }
+
+        crate::info!("Switching to {}", next);
 
         let last = self.tasks.get(self.current).expect("last");
         self.current = next;
@@ -147,14 +150,14 @@ fn cpu_switch_to(last: &Task, new: &Task) {
     unsafe { Task::cpu_switch_to(last, new) }
 }
 
-pub unsafe fn spawn_process(f: fn()) -> Result<(), &'static str> {
+pub unsafe fn spawn_process(f: fn(), prio: u64) -> Result<(), &'static str> {
     SCHEDULER.preempt_disable();
     let page = next_free_page()?;
     let mut task: WrappedPointer<Task> = WrappedPointer::new(page.addr());
 
-    task.priority = 10;
+    task.priority = prio;
     task.state = TaskState::Running;
-    task.counter = 10;
+    task.counter = prio;
     task.preempt_count = 1;
 
     task.context.registers[0] = f as usize as u64; // x19
