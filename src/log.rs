@@ -1,6 +1,19 @@
-use core::fmt;
+use core::{fmt, str::FromStr};
 
-use crate::common::{serial_console::Write, statics::CONSOLE};
+use crate::common::{
+    serial_console::Write,
+    statics::{CONSOLE, LOG_LEVEL},
+};
+
+pub unsafe fn init_logging() {
+    if let Some(log_level) = option_env!("LOG_LEVEL")
+        .map(|val| usize::from_str(val))
+        .transpose()
+        .expect("parse LOG_LEVEL value")
+    {
+        LOG_LEVEL = log_level;
+    }
+}
 
 pub fn _print(args: fmt::Arguments) {
     CONSOLE.write_fmt(args).expect("default console write_fmt")

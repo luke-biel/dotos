@@ -19,8 +19,6 @@
 #![feature(const_maybe_uninit_write)]
 #![feature(once_cell)]
 
-use core::str::FromStr;
-
 use arch::aarch64::cpu::exception::current_privilege_level;
 
 use crate::{
@@ -37,10 +35,10 @@ use crate::{
         scheduler::{spawn_process, SCHEDULER},
         state::KernelState,
         statics,
-        statics::LOG_LEVEL,
         sync::ReadWriteLock,
         time::scheduling::SchedulingManager,
     },
+    log::init_logging,
 };
 
 crate mod arch;
@@ -90,13 +88,7 @@ unsafe fn kernel_main() -> ! {
     );
     info!("build time: {}", env!("BUILD_DATE"));
     info!("git head: {}", env!("GIT_HASH"));
-    if let Some(log_level) = option_env!("LOG_LEVEL")
-        .map(|val| usize::from_str(val))
-        .transpose()
-        .expect("parse LOG_LEVEL value")
-    {
-        LOG_LEVEL = log_level;
-    }
+    init_logging();
 
     statics::BSP_DRIVER_MANAGER.print_status();
     statics::INTERRUPT_CONTROLLER.print_status();
