@@ -92,7 +92,7 @@ impl<const C: usize> SchedulerInner<C> {
             return;
         }
 
-        crate::info!("Switching to {}", next);
+        crate::trace!("Switching to task id {}", next);
 
         let last = self.tasks.get(self.current).expect("last");
         self.current = next;

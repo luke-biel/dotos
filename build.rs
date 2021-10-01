@@ -10,4 +10,7 @@ fn main() {
     let output = Command::new("date").output().unwrap();
     let date = String::from_utf8_lossy(&output.stdout);
     println!("cargo:rustc-env=BUILD_DATE={}", date);
+    if let Some(log_level) = option_env!("LOG_LEVEL") {
+        println!("cargo:rustc-env=LOG_LEVEL={}", log_level);
+    }
 }

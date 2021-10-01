@@ -19,6 +19,7 @@
 #![feature(const_maybe_uninit_write)]
 #![feature(once_cell)]
 
+use core::str::FromStr;
 use arch::aarch64::cpu::exception::current_privilege_level;
 
 use crate::{
@@ -26,7 +27,6 @@ use crate::{
         aarch64::cpu::exception::asynchronous::local_irq_set_mask,
         arch_impl::cpu::{
             exception::{asynchronous::get_mask_state, init_exception_handling},
-            instructions::wfe,
             park,
         },
     },
@@ -40,6 +40,7 @@ use crate::{
         time::scheduling::SchedulingManager,
     },
 };
+use crate::common::statics::LOG_LEVEL;
 
 crate mod arch;
 mod bsp;
@@ -88,6 +89,7 @@ unsafe fn kernel_main() -> ! {
     );
     info!("build time: {}", env!("BUILD_DATE"));
     info!("git head: {}", env!("GIT_HASH"));
+    LOG_LEVEL = option_env!("LOG_LEVEL").map(|val| usize::from_str(val)).transpose().expect("parse LOG_LEVEL value").unwrap_or(2);
 
     statics::BSP_DRIVER_MANAGER.print_status();
     statics::INTERRUPT_CONTROLLER.print_status();
@@ -108,12 +110,12 @@ unsafe fn kernel_main() -> ! {
         || loop {
             SCHEDULER.schedule()
         },
-        20,
+        1,
     )
     .expect("spawn INIT process");
 
-    spawn_process(test1, 10).expect("spawn test process");
-    spawn_process(test2, 10).expect("spawn test process");
+    spawn_process(test1, 10).expect("spawn test1 process");
+    spawn_process(test2, 10).expect("spawn test1 process");
     loop {
         park()
     }
@@ -126,7 +128,6 @@ fn test1() {
             crate::trace!("process 1.{}) {}", j, i);
         }
         j += 1;
-        unsafe { wfe() }
     }
 }
 
@@ -137,6 +138,5 @@ fn test2() {
             crate::trace!("process 2.{}) {}", j, i);
         }
         j += 1;
-        unsafe { wfe() }
     }
 }

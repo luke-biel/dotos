@@ -27,7 +27,10 @@ macro_rules! log {
         let ts = $crate::common::statics::CLOCK_TIMER.uptime();
         let sts = ts.subsec_micros();
 
-        if $crate::common::statics::LOG_LEVEL >= $log_lv {
+        #[allow(unused_unsafe)]
+        let global_log_level = unsafe { $crate::common::statics::LOG_LEVEL };
+
+        if global_log_level >= $log_lv {
             $crate::log::_print(
                 format_args_nl!(
                     concat!("(", $log_kw, ")", "[{:>3}.{:03}{:03}] ", $s),
@@ -44,7 +47,10 @@ macro_rules! log {
         let ts = $crate::common::statics::CLOCK_TIMER.uptime();
         let sts = ts.subsec_micros();
 
-        if $crate::common::statics::LOG_LEVEL >= $log_lv {
+        #[allow(unused_unsafe)]
+        let global_log_level = unsafe { $crate::common::statics::LOG_LEVEL };
+
+        if global_log_level >= $log_lv {
             $crate::log::_print(
                     format_args_nl!(
                     concat!("(", $log_kw, ")", "[{:>3}.{:03}{:03}] ", $fs),

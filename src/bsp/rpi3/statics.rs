@@ -35,7 +35,7 @@ use crate::{
     common::{driver::Driver, memory::mmu::descriptors::MMIODescriptor},
 };
 
-pub const LOG_LEVEL: usize = 4;
+pub static mut LOG_LEVEL: usize = 2;
 
 pub unsafe fn panic_console() -> impl fmt::Write {
     let mut gpio = GpioInner::new(mmio::GPIO_START.addr());
