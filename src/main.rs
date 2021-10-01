@@ -19,8 +19,6 @@
 #![feature(const_maybe_uninit_write)]
 #![feature(once_cell)]
 
-use core::{intrinsics::volatile_load, time::Duration};
-
 use arch::aarch64::cpu::exception::current_privilege_level;
 
 use crate::{
@@ -38,9 +36,8 @@ use crate::{
         scheduler::{spawn_process, SCHEDULER},
         state::KernelState,
         statics,
-        statics::CLOCK_TIMER,
         sync::ReadWriteLock,
-        time::{clock::ClockManager, scheduling::SchedulingManager},
+        time::scheduling::SchedulingManager,
     },
 };
 
