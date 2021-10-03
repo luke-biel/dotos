@@ -6,6 +6,7 @@ pub mod serial_console;
 pub mod state;
 pub mod statics;
 pub mod sync;
+pub mod syscall;
 pub mod task;
 pub mod time;
 
