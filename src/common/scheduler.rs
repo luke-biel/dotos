@@ -12,14 +12,6 @@ use crate::{
     },
 };
 
-// pub static INIT_TASK: Task = Task {
-//     context: CpuContext::zero(),
-//     state: TaskState::Running,
-//     counter: 0,
-//     priority: 1,
-//     preempt_count: 0,
-// };
-
 pub static SCHEDULER: Scheduler<64> = Scheduler::new();
 
 struct SchedulerInner<const C: usize> {
@@ -150,14 +142,14 @@ fn cpu_switch_to(last: &Task, new: &Task) {
     unsafe { Task::cpu_switch_to(last, new) }
 }
 
-pub unsafe fn spawn_process(f: fn(), prio: u64) -> Result<(), &'static str> {
+pub unsafe fn spawn_process(f: fn(), priority: u64) -> Result<(), &'static str> {
     SCHEDULER.preempt_disable();
     let page = next_free_page()?;
     let mut task: WrappedPointer<Task> = WrappedPointer::new(page.addr());
 
-    task.priority = prio;
+    task.priority = priority;
     task.state = TaskState::Running;
-    task.counter = prio;
+    task.counter = priority;
     task.preempt_count = 1;
 
     task.context.registers[0] = f as usize as u64; // x19

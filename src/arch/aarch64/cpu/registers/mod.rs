@@ -2,6 +2,7 @@ use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 
 pub mod esr_el1;
+pub mod tcr_el1;
 
 const CORE_ID_MASK: usize = 0b11;
 

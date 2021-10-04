@@ -51,8 +51,7 @@ checksum = "dcb6dd1c2376d2e096796e234a70e17e94cc2d5d54ff8ce42b28cef1d0d359a4"
 [[package]]
 name = "bitaccess"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4f4ca6bf03c6f6b04c476dae5950419d9f4ac0914d12c1e2c301a561016cc2b"
+source = "git+https://github.com/luke-biel/bitaccess#de4a9e6c88245a5fe1abf67c39e1bd365de02ec6"
 dependencies = [
  "bitaccess_macros",
 ]
@@ -60,8 +59,7 @@ dependencies = [
 [[package]]
 name = "bitaccess_macros"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb7151ac7854b1bae8c5e38a483b4799c4a44ae7f9c250471e500ff224400ddf"
+source = "git+https://github.com/luke-biel/bitaccess#de4a9e6c88245a5fe1abf67c39e1bd365de02ec6"
 dependencies = [
  "convert_case",
  "proc-macro-error",
