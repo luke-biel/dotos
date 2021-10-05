@@ -7,7 +7,7 @@ use crate::common::{
 
 pub unsafe fn init_logging() {
     if let Some(log_level) = option_env!("LOG_LEVEL")
-        .map(|val| usize::from_str(val))
+        .map(usize::from_str)
         .transpose()
         .expect("parse LOG_LEVEL value")
     {

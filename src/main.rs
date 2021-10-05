@@ -3,7 +3,6 @@
 #![feature(asm)]
 #![feature(crate_visibility_modifier)]
 #![feature(core_intrinsics)]
-#![feature(const_panic)]
 #![feature(panic_info_message)]
 #![feature(format_args_nl)]
 #![feature(global_asm)]
@@ -19,7 +18,7 @@
 #![feature(const_maybe_uninit_write)]
 #![feature(once_cell)]
 
-use arch::aarch64::cpu::exception::current_privilege_level;
+use arch::arch_impl::cpu::exception::current_privilege_level;
 
 use crate::{
     arch::{

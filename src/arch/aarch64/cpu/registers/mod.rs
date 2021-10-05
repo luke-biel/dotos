@@ -4,6 +4,7 @@ use crate::arch::{
 };
 
 pub mod current_el;
+pub mod daif;
 pub mod esr_el1;
 pub mod mpidr_el1;
 pub mod tcr_el1;
