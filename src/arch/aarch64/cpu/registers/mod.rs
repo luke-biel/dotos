@@ -1,24 +1,13 @@
-use num_derive::FromPrimitive;
-use num_traits::FromPrimitive;
+use crate::arch::arch_impl::cpu::registers::current_el::{CurrentEl, ExceptionLevel};
 
+pub mod current_el;
 pub mod esr_el1;
 pub mod tcr_el1;
 
 const CORE_ID_MASK: usize = 0b11;
 
-#[derive(PartialEq, FromPrimitive)]
-pub enum ExceptionLevel {
-    EL0 = 0b0000,
-    EL1 = 0b0100,
-    EL2 = 0b1000,
-    EL3 = 0b1100,
-}
-
 pub unsafe fn current_el() -> ExceptionLevel {
-    let v: usize;
-    asm!("mrs {}, currentel", out(reg) v, options(nomem, nostack));
-
-    ExceptionLevel::from_usize(v).unwrap_or(ExceptionLevel::EL0)
+    CurrentEl::new().read(CurrentEl::Status).variant()
 }
 
 pub unsafe fn core_id_el1() -> usize {

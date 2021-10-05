@@ -1,7 +1,10 @@
 use crate::{
-    arch::aarch64::cpu::{
-        instructions::{eret, wfe},
-        registers::{core_id_el1, current_el, ExceptionLevel},
+    arch::{
+        aarch64::cpu::{
+            instructions::{eret, wfe},
+            registers::{core_id_el1, current_el},
+        },
+        arch_impl::cpu::registers::current_el::ExceptionLevel,
     },
     bsp::device::{
         cpu::BOOT_CORE_ID,
