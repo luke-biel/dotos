@@ -1,1 +1,1 @@
-pub const BOOT_CORE_ID: usize = 0;
+pub const BOOT_CORE_ID: u64 = 0;
