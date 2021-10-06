@@ -6,9 +6,9 @@ use crate::arch::{
 pub mod current_el;
 pub mod daif;
 pub mod esr_el1;
+pub mod far_el1;
 pub mod mpidr_el1;
 pub mod tcr_el1;
-pub mod far_el1;
 
 pub unsafe fn current_el() -> ExceptionLevel {
     CurrentEl::new().read(CurrentEl::Status).variant()
