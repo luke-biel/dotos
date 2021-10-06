@@ -2,7 +2,13 @@ use crate::{
     arch::{
         aarch64::cpu::{
             instructions::{eret, wfe},
-            registers::{core_id_el1, current_el},
+            registers::{
+                cnthctl_el2::CnthctlEl2,
+                cntvoff_el2::CntvoffEl2,
+                core_id_el1,
+                current_el,
+                hcr_el2::HcrEl2,
+            },
         },
         arch_impl::cpu::registers::current_el::ExceptionLevel,
     },
@@ -42,14 +48,9 @@ unsafe fn prepare_kernel() -> ! {
 #[inline(always)]
 unsafe fn enter_el1() -> ! {
     // TODO: Create facade around these registers
-    let cnthctl_el2 = 0b11_u64;
-    asm!("msr cnthctl_el2, {}", in(reg) cnthctl_el2, options(nostack, nomem));
-
-    let cntvoff_el2 = 0_u64;
-    asm!("msr cntvoff_el2, {}", in(reg) cntvoff_el2, options(nostack, nomem));
-
-    let hcr_el2 = 1_u64 << 31;
-    asm!("msr hcr_el2, {}", in(reg) hcr_el2, options(nostack, nomem));
+    CnthctlEl2::new().set(0b11);
+    CntvoffEl2::new().set(0);
+    HcrEl2::new().set(1 << 31); // Zero hcr_el2 register and set RW to EL1AArch64
 
     let spsr_el2 = 0b111100101_u64;
     asm!("msr spsr_el2, {}", in(reg) spsr_el2, options(nostack, nomem));
