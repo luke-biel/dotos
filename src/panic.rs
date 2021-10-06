@@ -1,6 +1,6 @@
 use core::{fmt, panic::PanicInfo};
 
-use crate::{arch::aarch64::cpu, common::statics::panic_console};
+use crate::{arch::arch_impl::cpu, common::statics::panic_console};
 
 fn panic_print(args: fmt::Arguments) {
     use fmt::Write;
