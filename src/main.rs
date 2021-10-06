@@ -21,12 +21,12 @@
 use arch::arch_impl::cpu::exception::current_privilege_level;
 
 use crate::{
-    arch::{
-        aarch64::cpu::exception::asynchronous::local_irq_set_mask,
-        arch_impl::cpu::{
-            exception::{asynchronous::get_mask_state, init_exception_handling},
-            park,
+    arch::arch_impl::cpu::{
+        exception::{
+            asynchronous::{get_mask_state, unmask_irq},
+            init_exception_handling,
         },
+        park,
     },
     common::{
         driver::DriverManager,
@@ -72,7 +72,7 @@ unsafe fn kernel_init() -> ! {
         .register_handler(&SCHEDULER)
         .expect("register ticks for scheduler");
 
-    local_irq_set_mask(false);
+    unmask_irq();
 
     statics::STATE_MANAGER.transition(KernelState::Init, KernelState::SingleCoreRun);
 

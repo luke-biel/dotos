@@ -51,7 +51,7 @@ checksum = "dcb6dd1c2376d2e096796e234a70e17e94cc2d5d54ff8ce42b28cef1d0d359a4"
 [[package]]
 name = "bitaccess"
 version = "0.3.0"
-source = "git+https://github.com/luke-biel/bitaccess#719327bbdb67bc1ae2f08e1ecb9674c4f6a2afbc"
+source = "git+https://github.com/luke-biel/bitaccess#aaee618cf86d528033096910eb92e2df05c03265"
 dependencies = [
  "bitaccess_macros",
 ]
@@ -59,7 +59,7 @@ dependencies = [
 [[package]]
 name = "bitaccess_macros"
 version = "0.3.0"
-source = "git+https://github.com/luke-biel/bitaccess#719327bbdb67bc1ae2f08e1ecb9674c4f6a2afbc"
+source = "git+https://github.com/luke-biel/bitaccess#aaee618cf86d528033096910eb92e2df05c03265"
 dependencies = [
  "convert_case",
  "proc-macro-error",
@@ -398,9 +398,9 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "syn"
-version = "1.0.78"
+version = "1.0.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4eac2e6c19f5c3abc0c229bea31ff0b9b091c7b14990e8924b92902a303a0c0"
+checksum = "d010a1623fbd906d51d650a9916aaefc05ffa0e4053ff7fe601167f3e715d194"
 dependencies = [
  "proc-macro2",
  "quote",

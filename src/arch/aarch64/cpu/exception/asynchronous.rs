@@ -1,6 +1,9 @@
 use derive_more::Display;
 
-use crate::arch::arch_impl::cpu::registers::daif::{Daif, Mask};
+use crate::arch::{
+    aarch64::cpu::registers::daif::Daifset,
+    arch_impl::cpu::registers::daif::{Daif, Daifclr, Mask},
+};
 
 #[derive(Display)]
 #[display(
@@ -17,20 +20,14 @@ pub struct ExceptionStatus {
     pub fiq: Mask,
 }
 
-pub fn local_irq_set_mask(mask: bool) {
-    const IRQ: u8 = 0b0010;
-    unsafe {
-        if mask {
-            asm!("msr daifset, {arg}", arg = const IRQ, options(nostack, nomem, preserves_flags));
-        } else {
-            asm!("msr daifclr, {arg}", arg = const IRQ, options(nostack, nomem, preserves_flags));
-        }
-    }
+#[no_mangle]
+pub fn unmask_irq() {
+    Daifclr::write(Daifclr::Irq)
 }
 
 #[no_mangle]
-pub fn disable_irq() {
-    local_irq_set_mask(false);
+pub fn mask_irq() {
+    Daifset::write(Daifset::Irq)
 }
 
 pub fn local_irq_save() -> u64 {

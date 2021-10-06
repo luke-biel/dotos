@@ -1,7 +1,10 @@
 use crate::{
     arch::{
         aarch64::memory::mmu::Granule64KB,
-        arch_impl::cpu::exception::{asynchronous::local_irq_set_mask, return_from_fork},
+        arch_impl::cpu::exception::{
+            asynchronous::{mask_irq, unmask_irq},
+            return_from_fork,
+        },
     },
     bsp::device_driver::WrappedPointer,
     common::{
@@ -125,9 +128,9 @@ impl<const C: usize> Scheduler<C> {
                 return;
             }
             current.counter = 0;
-            local_irq_set_mask(false);
+            unmask_irq();
             inner.schedule();
-            local_irq_set_mask(true);
+            mask_irq();
         })
     }
 }
