@@ -5,10 +5,11 @@ use crate::{
         statics,
     },
 };
+use crate::arch::arch_impl::cpu::registers::far_el1::FarEl1;
 
 unsafe fn default_handler(kind: &'static str, e: &mut ExceptionContext) {
-    let far_el1: u64;
-    asm!("mrs {}, far_el1", out(reg) far_el1, options(nostack, nomem));
+    let far_el1 = FarEl1::new().get();
+
     let esr_el1 = EsrEl1::fetch();
     panic!(
         "CPU Exception `{}`\n{}FAR_EL1:  {:#018x}\nESR_EL1:\n{}",

@@ -1,5 +1,7 @@
 use crate::common::task::Task;
 
+global_asm!(include_str!("task.s"));
+
 #[derive(Default, Debug)]
 #[repr(C)]
 pub struct CpuContext {
@@ -20,8 +22,6 @@ pub struct CpuContext {
 //         }
 //     }
 // }
-
-global_asm!(include_str!("task.s"));
 
 extern "C" {
     pub fn cpu_switch_to(prev: *const Task, next: *const Task);

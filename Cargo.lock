@@ -51,7 +51,7 @@ checksum = "dcb6dd1c2376d2e096796e234a70e17e94cc2d5d54ff8ce42b28cef1d0d359a4"
 [[package]]
 name = "bitaccess"
 version = "0.3.0"
-source = "git+https://github.com/luke-biel/bitaccess#aaee618cf86d528033096910eb92e2df05c03265"
+source = "git+https://github.com/luke-biel/bitaccess#06a4a431bf6e7557643dad2b409258308b96bc1f"
 dependencies = [
  "bitaccess_macros",
 ]
@@ -59,7 +59,7 @@ dependencies = [
 [[package]]
 name = "bitaccess_macros"
 version = "0.3.0"
-source = "git+https://github.com/luke-biel/bitaccess#aaee618cf86d528033096910eb92e2df05c03265"
+source = "git+https://github.com/luke-biel/bitaccess#06a4a431bf6e7557643dad2b409258308b96bc1f"
 dependencies = [
  "convert_case",
  "proc-macro-error",
