@@ -23,7 +23,7 @@ use arch::arch_impl::cpu::exception::current_privilege_level;
 use crate::{
     arch::arch_impl::cpu::{
         exception::{
-            asynchronous::{get_mask_state, unmask_irq},
+            asynchronous::{unmask_irq, ExceptionStatus},
             init_exception_handling,
         },
         park,
@@ -103,7 +103,7 @@ unsafe fn kernel_main() -> ! {
     // // TEMP end
 
     info!("current privilege level: {}", current_privilege_level());
-    info!("exception status: {}", get_mask_state());
+    info!("exception status: {}", ExceptionStatus::read());
 
     spawn_process(
         || loop {

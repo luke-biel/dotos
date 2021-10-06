@@ -20,6 +20,19 @@ pub struct ExceptionStatus {
     pub fiq: Mask,
 }
 
+impl ExceptionStatus {
+    pub fn read() -> Self {
+        let daif = Daif::fetch();
+
+        ExceptionStatus {
+            debug: daif.read(Daif::Debug).variant(),
+            s_error: daif.read(Daif::SError).variant(),
+            irq: daif.read(Daif::IRQ).variant(),
+            fiq: daif.read(Daif::FIQ).variant(),
+        }
+    }
+}
+
 #[no_mangle]
 pub fn unmask_irq() {
     Daifclr::write(Daifclr::Irq)
@@ -36,15 +49,4 @@ pub fn local_irq_save() -> u64 {
 
 pub fn local_irq_restore(state: u64) {
     Daif::new().set(state);
-}
-
-pub fn get_mask_state() -> ExceptionStatus {
-    let daif = Daif::fetch();
-
-    ExceptionStatus {
-        debug: daif.read(Daif::Debug).variant(),
-        s_error: daif.read(Daif::SError).variant(),
-        irq: daif.read(Daif::IRQ).variant(),
-        fiq: daif.read(Daif::FIQ).variant(),
-    }
 }
