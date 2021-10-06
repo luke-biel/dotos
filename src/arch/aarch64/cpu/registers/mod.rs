@@ -7,10 +7,13 @@ pub mod cnthctl_el2;
 pub mod cntvoff_el2;
 pub mod current_el;
 pub mod daif;
+pub mod elr_el2;
 pub mod esr_el1;
 pub mod far_el1;
 pub mod hcr_el2;
 pub mod mpidr_el1;
+pub mod sp_el1;
+pub mod spsr_el2;
 pub mod tcr_el1;
 
 pub unsafe fn current_el() -> ExceptionLevel {

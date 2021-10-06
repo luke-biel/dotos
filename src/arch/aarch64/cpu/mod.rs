@@ -10,7 +10,12 @@ use crate::{
                 hcr_el2::HcrEl2,
             },
         },
-        arch_impl::cpu::registers::current_el::ExceptionLevel,
+        arch_impl::cpu::registers::{
+            current_el::ExceptionLevel,
+            elr_el2::ElrEl2,
+            sp_el1::SpEl1,
+            spsr_el2::SpsrEl2,
+        },
     },
     bsp::device::{
         cpu::BOOT_CORE_ID,
@@ -47,19 +52,12 @@ unsafe fn prepare_kernel() -> ! {
 /// Method prepares register values for el2 -> el1 change and then entries `init` function
 #[inline(always)]
 unsafe fn enter_el1() -> ! {
-    // TODO: Create facade around these registers
     CnthctlEl2::new().set(0b11);
     CntvoffEl2::new().set(0);
     HcrEl2::new().set(1 << 31); // Zero hcr_el2 register and set RW to EL1AArch64
-
-    let spsr_el2 = 0b111100101_u64;
-    asm!("msr spsr_el2, {}", in(reg) spsr_el2, options(nostack, nomem));
-
-    let init = crate::kernel_init as *const () as u64;
-    asm!("msr elr_el2, {}", in(reg) init, options(nostack, nomem));
-
-    let boot_core_stack_ende = boot_core_stack_ende().addr();
-    asm!("msr sp_el1, {}", in(reg) boot_core_stack_ende, options(nostack, nomem));
+    SpsrEl2::new().set(0b111100101);
+    ElrEl2::new().set(crate::kernel_init as *const () as u64);
+    SpEl1::new().set(boot_core_stack_ende().addr() as u64);
 
     eret()
 }
