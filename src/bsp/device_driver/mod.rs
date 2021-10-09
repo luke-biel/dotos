@@ -42,3 +42,9 @@ impl<T> DerefMut for WrappedPointer<T> {
         unsafe { &mut *(self.pointer as *mut _) }
     }
 }
+
+impl<T> WrappedPointer<T> {
+    pub fn addr(&self) -> usize {
+        self.pointer
+    }
+}

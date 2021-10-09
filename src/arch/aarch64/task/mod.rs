@@ -5,23 +5,29 @@ global_asm!(include_str!("task.s"));
 #[derive(Default, Debug)]
 #[repr(C)]
 pub struct CpuContext {
-    // x19 - x28, task cannot save state of registers < x19 (they can change between jumps, per ARM spec)
-    pub registers: [u64; 10],
+    pub x19: u64,
+    pub x20: u64,
+    pub x21: u64,
+    pub x22: u64,
+    pub x23: u64,
+    pub x24: u64,
+    pub x25: u64,
+    pub x26: u64,
+    pub x27: u64,
+    pub x28: u64,
     pub fp: u64,
     pub sp: u64,
     pub pc: u64,
 }
 
-// impl CpuContext {
-//     pub const fn zero() -> Self {
-//         Self {
-//             registers: [0; 10],
-//             fp: 0,
-//             sp: 0,
-//             pc: 0,
-//         }
-//     }
-// }
+#[derive(Clone)]
+#[repr(C)]
+pub struct PtRegs {
+    pub registers: [u64; 31],
+    pub sp: u64,
+    pub pc: u64,
+    pub pstate: u64,
+}
 
 extern "C" {
     pub fn cpu_switch_to(prev: *const Task, next: *const Task);

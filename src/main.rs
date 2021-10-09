@@ -27,11 +27,12 @@ use crate::{
             init_exception_handling,
         },
         park,
+        registers::current_el::CurrentEl,
     },
     common::{
         driver::DriverManager,
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
-        scheduler::{spawn_process, SCHEDULER},
+        scheduler::{move_to_user_mode, spawn_process, SCHEDULER},
         state::KernelState,
         statics,
         sync::ReadWriteLock,
@@ -94,48 +95,39 @@ unsafe fn kernel_main() -> ! {
     statics::INTERRUPT_CONTROLLER.print_status();
     statics::KERNEL_MAPPING_RECORD.map_read(|r| r.print_status());
 
-    // // TEMP
-    // let big_addr: u64 = 1024 * 1024 * 1024 * 8;
-    // unsafe {
-    //     core::ptr::read_volatile(big_addr as *mut u64);
-    // }
-    // info!("Recovery from exception successful");
-    // // TEMP end
-
     info!("current privilege level: {}", current_privilege_level());
     info!("exception status: {}", ExceptionStatus::read());
 
-    spawn_process(
-        || loop {
-            SCHEDULER.schedule()
-        },
-        1,
-    )
-    .expect("spawn INIT process");
+    SCHEDULER.init();
 
-    spawn_process(test1, 10).expect("spawn test1 process");
-    spawn_process(test2, 10).expect("spawn test1 process");
+    spawn_process(kernel_proc as usize as u64, 2, 0, 0).expect("spawn test1 process");
     loop {
-        park()
+        SCHEDULER.schedule()
     }
 }
 
-fn test1() {
+fn kernel_proc() -> ! {
+    crate::info!(
+        "Kernel process started {}",
+        CurrentEl::new().read(CurrentEl::Status).variant()
+    );
+    if let Err(e) = move_to_user_mode(test1 as usize as u64) {
+        crate::error!("Failed to move to user mode, {}", e);
+    }
+    unsafe { park() }
+}
+
+fn test1() -> ! {
     let mut j = 0;
     loop {
         for i in 1..200 {
             crate::trace!("process 1.{}) {}", j, i);
         }
         j += 1;
-    }
-}
-
-fn test2() {
-    let mut j = 0;
-    loop {
-        for i in 1..200 {
-            crate::trace!("process 2.{}) {}", j, i);
-        }
-        j += 1;
+        crate::error!("bu");
+        // panic!(
+        //     "User process {}",
+        //     CurrentEl::new().read(CurrentEl::Status).variant()
+        // );
     }
 }

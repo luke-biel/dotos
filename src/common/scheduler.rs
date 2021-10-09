@@ -1,9 +1,14 @@
+use core::mem::size_of;
+
 use crate::{
     arch::{
         aarch64::memory::mmu::Granule64KB,
-        arch_impl::cpu::exception::{
-            asynchronous::{mask_irq, unmask_irq},
-            return_from_fork,
+        arch_impl::{
+            cpu::exception::{
+                asynchronous::{mask_irq, unmask_irq},
+                return_from_fork,
+            },
+            task::{CpuContext, PtRegs},
         },
     },
     bsp::device_driver::WrappedPointer,
@@ -16,6 +21,29 @@ use crate::{
 };
 
 pub static SCHEDULER: Scheduler<64> = Scheduler::new();
+pub static mut INIT_TASK: Task = Task {
+    context: CpuContext {
+        x19: 0,
+        x20: 0,
+        x21: 0,
+        x22: 0,
+        x23: 0,
+        x24: 0,
+        x25: 0,
+        x26: 0,
+        x27: 0,
+        x28: 0,
+        fp: 0,
+        sp: 0,
+        pc: 0,
+    },
+    state: TaskState::Running,
+    counter: 0,
+    priority: 0,
+    preempt_count: 0,
+    stack: 0,
+    flags: 0,
+};
 
 struct SchedulerInner<const C: usize> {
     tasks: heapless::Vec<WrappedPointer<Task>, C>,
@@ -32,6 +60,14 @@ impl<const C: usize> SchedulerInner<C> {
             tasks: heapless::Vec::new(),
             current: 0,
         }
+    }
+
+    pub fn init(&mut self) {
+        unsafe {
+            self.tasks
+                .push(WrappedPointer::new(&mut INIT_TASK as *mut Task as usize))
+                .expect("push init task")
+        };
     }
 
     fn push_task(&mut self, task: WrappedPointer<Task>) {
@@ -104,6 +140,10 @@ impl<const C: usize> Scheduler<C> {
         }
     }
 
+    pub fn init(&self) {
+        self.inner.map_locked(|inner| inner.init());
+    }
+
     pub fn register_new_waiting_task(&self, task: WrappedPointer<Task>) {
         self.inner.map_locked(|inner| inner.push_task(task))
     }
@@ -133,6 +173,13 @@ impl<const C: usize> Scheduler<C> {
             mask_irq();
         })
     }
+
+    pub fn current(&self) -> WrappedPointer<Task> {
+        let current = self
+            .inner
+            .map_locked(|inner| inner.current().unwrap().addr());
+        unsafe { WrappedPointer::new(current) }
+    }
 }
 
 impl<const C: usize> TickCallbackHandler for Scheduler<C> {
@@ -145,24 +192,61 @@ fn cpu_switch_to(last: &Task, new: &Task) {
     unsafe { Task::cpu_switch_to(last, new) }
 }
 
-pub unsafe fn spawn_process(f: fn(), priority: u64) -> Result<(), &'static str> {
+pub unsafe fn spawn_process(f: u64, flags: u64, arg: u64, stack: u64) -> Result<(), &'static str> {
     SCHEDULER.preempt_disable();
     let page = next_free_page()?;
     let mut task: WrappedPointer<Task> = WrappedPointer::new(page.addr());
 
-    task.priority = priority;
+    let mut child_regs = pt_regs(&task);
+    (child_regs.addr() as *mut PtRegs).write_bytes(0, 1);
+    (task.addr() as *mut CpuContext).write_bytes(0, 1); // This works on behalf of CpuContext being first field
+
+    if flags & 2 > 0 {
+        task.context.x19 = f;
+        task.context.x20 = arg;
+    } else {
+        let cur_regs = pt_regs(&SCHEDULER.current());
+        (child_regs.addr() as *mut PtRegs).write_volatile(cur_regs.clone());
+        child_regs.registers[0] = 0;
+        child_regs.sp = stack + Granule64KB::SIZE as u64;
+        task.stack = stack;
+    }
+
+    task.flags = flags;
+
+    task.priority = 10;
     task.state = TaskState::Running;
-    task.counter = priority;
+    task.counter = task.priority;
     task.preempt_count = 1;
 
-    task.context.registers[0] = f as usize as u64; // x19
     task.context.pc = return_from_fork.get() as u64;
-    task.context.sp = (page.addr() + Granule64KB::SIZE) as u64;
+    task.context.sp = child_regs.addr() as u64;
 
     SCHEDULER.register_new_waiting_task(task);
     SCHEDULER.preempt_enable();
 
     Ok(())
+}
+
+pub fn move_to_user_mode(f: u64) -> Result<(), &'static str> {
+    let mut current = SCHEDULER.current();
+
+    let mut regs = unsafe { pt_regs(&current) };
+
+    unsafe { (regs.addr() as *mut PtRegs).write_bytes(0, 1) };
+
+    regs.pc = f;
+    regs.pstate = 0;
+    let stack = next_free_page()?;
+
+    regs.sp = (stack.addr() + Granule64KB::SIZE) as u64;
+    current.stack = stack.addr() as u64;
+
+    Ok(())
+}
+
+unsafe fn pt_regs(task: &WrappedPointer<Task>) -> WrappedPointer<PtRegs> {
+    WrappedPointer::new(task.addr() + 4096 - size_of::<PtRegs>())
 }
 
 #[no_mangle]

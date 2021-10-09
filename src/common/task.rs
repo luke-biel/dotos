@@ -12,6 +12,8 @@ pub struct Task {
     pub priority: u64,
     /// Task is performing critical work and cannot be dispossessed
     pub preempt_count: u64,
+    pub stack: u64,
+    pub flags: u64,
 }
 
 #[derive(FromPrimitive, ToPrimitive, Copy, Clone, Debug, PartialEq)]

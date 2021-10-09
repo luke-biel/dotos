@@ -1,6 +1,7 @@
 use bitaccess::{bitaccess, FieldAccess};
+use derive_more::Display;
 
-#[derive(FieldAccess, PartialEq)]
+#[derive(FieldAccess, PartialEq, Display)]
 #[field_access(u64)]
 pub enum ExceptionLevel {
     EL0 = 0b0000,

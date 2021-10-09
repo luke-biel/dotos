@@ -43,7 +43,8 @@ macro_rules! log {
         #[allow(unused_unsafe)]
         let global_log_level = unsafe { $crate::common::statics::LOG_LEVEL };
 
-        if global_log_level >= $log_lv {
+            #[allow(unused_comparisons)]
+            if global_log_level >= $log_lv {
             $crate::log::_print(
                 format_args_nl!(
                     concat!("(", $log_kw, ")", "[{:>3}.{:03}{:03}] ", $s),
@@ -63,6 +64,7 @@ macro_rules! log {
         #[allow(unused_unsafe)]
         let global_log_level = unsafe { $crate::common::statics::LOG_LEVEL };
 
+        #[allow(unused_comparisons)]
         if global_log_level >= $log_lv {
             $crate::log::_print(
                     format_args_nl!(
