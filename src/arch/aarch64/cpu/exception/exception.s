@@ -124,9 +124,9 @@ el1_irq:
     KERNEL_EXIT 1
 
 el0_irq:
-    KERNEL_ENTRY 1
+    KERNEL_ENTRY 0
     bl lower_aarch64_irq
-    KERNEL_EXIT 1
+    KERNEL_EXIT 0
 
 __ex_restore:
     ldr w19,      [sp, #16 * 16]

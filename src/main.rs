@@ -106,7 +106,7 @@ unsafe fn kernel_main() -> ! {
     }
 }
 
-fn kernel_proc() -> ! {
+fn kernel_proc() {
     crate::info!(
         "Kernel process started {}",
         CurrentEl::new().read(CurrentEl::Status).variant()
@@ -114,20 +114,11 @@ fn kernel_proc() -> ! {
     if let Err(e) = move_to_user_mode(test1 as usize as u64) {
         crate::error!("Failed to move to user mode, {}", e);
     }
-    unsafe { park() }
 }
 
 fn test1() -> ! {
-    let mut j = 0;
-    loop {
-        for i in 1..200 {
-            crate::trace!("process 1.{}) {}", j, i);
-        }
-        j += 1;
-        crate::error!("bu");
-        // panic!(
-        //     "User process {}",
-        //     CurrentEl::new().read(CurrentEl::Status).variant()
-        // );
-    }
+    panic!(
+        "User process {}",
+        CurrentEl::new().read(CurrentEl::Status).variant()
+    );
 }

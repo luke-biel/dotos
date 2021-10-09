@@ -118,13 +118,13 @@ impl fmt::Display for EsrEl1Representation {
 
         write!(
             f,
-            "\n    IL: {}\n    ISS: \n",
+            "\n    IL: {}\n    ISS: ",
             self.read(EsrEl1::IL).value()
         )?;
 
         if is_iss_data_abort {
             let iss_data_abort = ISSDataAbort::from_value(self.read(EsrEl1::ISS).value());
-            write!(f, "{}", iss_data_abort)?;
+            write!(f, "\n{}", iss_data_abort)?;
         } else {
             write!(f, "{}", self.read(EsrEl1::ISS).value())?;
         }
