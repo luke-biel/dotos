@@ -19,6 +19,7 @@ pub enum MemoryAttributes {
 pub enum AccessPermissions {
     RX,
     RW,
+    RW_EL0,
 }
 
 #[derive(Copy, Clone, Debug, Display)]

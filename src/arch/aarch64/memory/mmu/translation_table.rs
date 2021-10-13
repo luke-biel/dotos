@@ -1,7 +1,7 @@
 use core::{convert, fmt::Formatter};
 
 use tock_registers::{
-    interfaces::{Readable, Writeable},
+    interfaces::{ReadWriteable, Readable, Writeable},
     register_bitfields,
     registers::InMemoryRegister,
 };
@@ -15,21 +15,25 @@ use crate::{
         },
         rpi3::memory::{map::user::PAGE_COUNT, mmu::KernelGranule},
     },
-    common::memory::{
-        mmu::{
-            descriptors::{
-                AccessPermissions,
-                Attributes,
-                Execute,
-                MemoryAttributes,
-                Page,
-                PageSliceDescriptor,
+    common::{
+        memory::{
+            mmu::{
+                descriptors::{
+                    AccessPermissions,
+                    Attributes,
+                    Execute,
+                    MemoryAttributes,
+                    Page,
+                    PageSliceDescriptor,
+                },
+                translation_table::TranslationTable,
             },
-            translation_table::TranslationTable,
+            Address,
+            Physical,
+            Virtual,
         },
-        Address,
-        Physical,
-        Virtual,
+        statics::KERNEL_TABLES,
+        sync::Mutex,
     },
 };
 
@@ -175,6 +179,7 @@ impl convert::From<Attributes>
         desc += match attribute_fields.access {
             AccessPermissions::RX => STAGE1_PAGE_DESCRIPTOR::AP::RO_EL1,
             AccessPermissions::RW => STAGE1_PAGE_DESCRIPTOR::AP::RW_EL1,
+            AccessPermissions::RW_EL0 => STAGE1_PAGE_DESCRIPTOR::AP::RW_EL1_EL0,
         };
 
         desc += match attribute_fields.execute {
@@ -182,7 +187,10 @@ impl convert::From<Attributes>
             Execute::Never => STAGE1_PAGE_DESCRIPTOR::PXN::True,
         };
 
-        desc += STAGE1_PAGE_DESCRIPTOR::UXN::True;
+        desc += match attribute_fields.execute {
+            Execute::Allow => STAGE1_PAGE_DESCRIPTOR::UXN::False,
+            Execute::Never => STAGE1_PAGE_DESCRIPTOR::UXN::True,
+        };
 
         desc
     }
@@ -315,6 +323,7 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
         for (ppage, vpage) in p.iter().zip(v.iter()) {
             let descriptor = self.page_descriptor(vpage)?;
             if descriptor.is_valid() {
+                crate::error!("{:x}, {:x}", ppage.addr(), vpage.addr());
                 return Err("map_pages: Virtual page already mapped");
             }
 
@@ -366,13 +375,22 @@ impl<const NUM_TABLES: usize> TranslationTable for FixedSizeTranslationTable<NUM
             return Err("out of memory");
         }
 
-        let addr =
-            Address::new(LOW_MEMORY.addr() + (self.current_l3_user_index * Granule64KB::SIZE));
+        let addr: usize = LOW_MEMORY.addr() + (self.current_l3_user_index * Granule64KB::SIZE);
         self.current_l3_user_index += num_pages;
 
         crate::trace!("registered {} user page(s) at {}", num_pages, addr);
 
-        Ok(PageSliceDescriptor::from_addr(addr, num_pages))
+        let ppages = PageSliceDescriptor::from_addr(Address::<Physical>::new(addr), num_pages);
+        let vpages = PageSliceDescriptor::from_addr(Address::<Virtual>::new(addr), num_pages);
+        let attributes = Attributes {
+            memory: MemoryAttributes::CacheableDRAM,
+            access: AccessPermissions::RW_EL0,
+            execute: Execute::Never,
+        };
+
+        unsafe { KERNEL_TABLES.map_locked(|kt| kt.map_pages(vpages, ppages, attributes))? };
+
+        Ok(vpages)
     }
 
     fn is_page_slice_mmio(&self, pages: PageSliceDescriptor<Virtual>) -> bool {

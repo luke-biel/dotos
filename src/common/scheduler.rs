@@ -242,6 +242,8 @@ pub fn move_to_user_mode(f: u64) -> Result<(), &'static str> {
     regs.sp = (stack.addr() + Granule64KB::SIZE) as u64;
     current.stack = stack.addr() as u64;
 
+    crate::info!("stack {} {:x?} {:x?}, {:x}", stack, regs, current, f);
+
     Ok(())
 }
 

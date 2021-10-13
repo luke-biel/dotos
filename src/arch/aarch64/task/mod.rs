@@ -1,3 +1,5 @@
+use derive_more::Display;
+
 use crate::common::task::Task;
 
 global_asm!(include_str!("task.s"));
@@ -20,7 +22,7 @@ pub struct CpuContext {
     pub pc: u64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub struct PtRegs {
     pub registers: [u64; 31],

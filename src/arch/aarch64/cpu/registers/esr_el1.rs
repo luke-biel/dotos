@@ -100,30 +100,36 @@ pub enum DfscVariants {
 
 impl fmt::Display for EsrEl1Representation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "    EC: ")?;
-        let is_iss_data_abort = match self.read(EsrEl1::EC).value() {
+        match self.read(EsrEl1::EC).value() {
             0b10_0100 => {
-                write!(f, "`DataAbortLowerEL`")?;
-                true
+                let iss_data_abort = ISSDataAbort::from_value(self.read(EsrEl1::ISS).value());
+                write!(
+                    f,
+                    "    EC: `DataAbortLowerEL`\n    IL: {}\n    ISS: \n{}",
+                    self.read(EsrEl1::IL).value(),
+                    iss_data_abort
+                )?;
             }
             0b10_0101 => {
-                write!(f, "`DataAbortCurrentEL`")?;
-                true
+                let iss_data_abort = ISSDataAbort::from_value(self.read(EsrEl1::ISS).value());
+                write!(
+                    f,
+                    "    EC: `DataAbortCurrentEL`\n    IL: {}\n    ISS: \n{}",
+                    self.read(EsrEl1::IL).value(),
+                    iss_data_abort
+                )?;
             }
+
             val => {
-                write!(f, "{}", val)?;
-                false
+                write!(
+                    f,
+                    "    EC: {:06b}\n    IL: {}\n    ISS: {:024b}",
+                    val,
+                    self.read(EsrEl1::IL).value(),
+                    self.read(EsrEl1::ISS).value()
+                )?;
             }
         };
-
-        write!(f, "\n    IL: {}\n    ISS: ", self.read(EsrEl1::IL).value())?;
-
-        if is_iss_data_abort {
-            let iss_data_abort = ISSDataAbort::from_value(self.read(EsrEl1::ISS).value());
-            write!(f, "\n{}", iss_data_abort)?;
-        } else {
-            write!(f, "{}", self.read(EsrEl1::ISS).value())?;
-        }
 
         Ok(())
     }

@@ -101,7 +101,7 @@ pub fn map_kernel_pages_at(
     attr: Attributes,
 ) -> Result<(), &'static str> {
     if KERNEL_TABLES.map_locked(|tables| tables.is_page_slice_mmio(vpages)) {
-        return Err("Cannot manualy map into mmio region");
+        return Err("Cannot manually map into mmio region");
     }
 
     map_kernel_pages_unchecked(name, vpages, ppages, attr)

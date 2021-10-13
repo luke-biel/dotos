@@ -22,12 +22,16 @@ use arch::arch_impl::cpu::exception::current_privilege_level;
 use bitaccess::ReadBits;
 
 use crate::{
-    arch::arch_impl::cpu::{
-        exception::{
-            asynchronous::{unmask_irq, ExceptionStatus},
-            init_exception_handling,
+    arch::{
+        aarch64::syscall::_write,
+        arch_impl::cpu::{
+            exception::{
+                asynchronous::{unmask_irq, ExceptionStatus},
+                init_exception_handling,
+            },
+            park,
+            registers::current_el::{current_el, CurrentEl},
         },
-        registers::current_el::{current_el, CurrentEl},
     },
     common::{
         driver::DriverManager,
@@ -114,8 +118,6 @@ fn kernel_proc() {
 }
 
 fn test1() -> ! {
-    panic!(
-        "User process {}",
-        CurrentEl::new().read(CurrentEl::Status).variant()
-    );
+    unsafe { _write(b"abc".as_ptr(), 3) }
+    unsafe { park() }
 }
