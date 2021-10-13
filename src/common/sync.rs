@@ -1,5 +1,7 @@
 use core::cell::UnsafeCell;
 
+use bitaccess::ReadBits;
+
 use crate::{
     arch::arch_impl::cpu::{
         exception::asynchronous::{local_irq_restore, local_irq_save},
@@ -93,7 +95,7 @@ impl<T> ReadWriteLock for InitStateLock<T> {
         if !statics::STATE_MANAGER.is_init() {
             panic!("Called InitStateLock after init")
         }
-        if Daif::new().read(Daif::IRQ).value() == 0 {
+        if Daif.read(Daif::IRQ).value() == 0 {
             panic!("Called InitStateLock with IRQ unmasked")
         }
 

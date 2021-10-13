@@ -1,6 +1,6 @@
 use core::fmt;
 
-use bitaccess::{bitaccess, FieldAccess};
+use bitaccess::{bitaccess, FieldAccess, ReadBits};
 use derive_more::Display;
 
 #[bitaccess(
@@ -116,11 +116,7 @@ impl fmt::Display for EsrEl1Representation {
             }
         };
 
-        write!(
-            f,
-            "\n    IL: {}\n    ISS: ",
-            self.read(EsrEl1::IL).value()
-        )?;
+        write!(f, "\n    IL: {}\n    ISS: ", self.read(EsrEl1::IL).value())?;
 
         if is_iss_data_abort {
             let iss_data_abort = ISSDataAbort::from_value(self.read(EsrEl1::ISS).value());
@@ -138,14 +134,14 @@ impl fmt::Display for ISSDataAbort {
         let isv = self.read(ISSDataAbort::ISV).variant();
         writeln!(f, "        ISV: {:?},", isv)?;
         match isv {
-            Isv::Valid => {
+            ISV::Valid => {
                 writeln!(f, "        SAS: {},", self.read(ISSDataAbort::SAS).value())?;
                 writeln!(f, "        SSE: {},", self.read(ISSDataAbort::SSE).value())?;
                 writeln!(f, "        SRT: {},", self.read(ISSDataAbort::SRT).value())?;
                 writeln!(f, "        SF: {},", self.read(ISSDataAbort::SF).value())?;
                 writeln!(f, "        AR: {},", self.read(ISSDataAbort::AR).value())?;
             }
-            Isv::NoValid => {
+            ISV::NoValid => {
                 writeln!(f, "        23..14: RES0")?;
             }
         }

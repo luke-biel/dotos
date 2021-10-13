@@ -3,16 +3,16 @@ use core::intrinsics::unlikely;
 use crate::{
     arch::arch_impl::{
         cpu::registers::tcr_el1::{
-            Epd0,
-            Epd1,
             GranuleSize0,
             IPSVariants,
             InnerCacheability,
             OuterCacheability,
             Shareability,
-            Tbi0,
             TcrEl1,
             A1,
+            EPD0,
+            EPD1,
+            TBI0,
         },
         memory::mmu::translation_table::KernelTranslationTable,
     },
@@ -57,7 +57,7 @@ impl Aarch64MemoryManagementUnit {
 
         let mut val = TcrEl1::fetch();
         val.write_to_cache(TcrEl1::IPS, IPSVariants::Bits40);
-        val.write_to_cache(TcrEl1::TBI0, Tbi0::Unset);
+        val.write_to_cache(TcrEl1::TBI0, TBI0::Unset);
         val.write_to_cache(TcrEl1::TG0, GranuleSize0::KB64);
         val.write_to_cache(TcrEl1::SH0, Shareability::Inner);
         val.write_to_cache(
@@ -68,9 +68,9 @@ impl Aarch64MemoryManagementUnit {
             TcrEl1::IRGN0,
             InnerCacheability::WriteBack_ReadAlloc_WriteAlloc,
         );
-        val.write_to_cache(TcrEl1::EPD0, Epd0::Enable);
+        val.write_to_cache(TcrEl1::EPD0, EPD0::Enable);
         val.write_to_cache(TcrEl1::A1, A1::TTBR0);
-        val.write_to_cache(TcrEl1::EPD1, Epd1::Disable);
+        val.write_to_cache(TcrEl1::EPD1, EPD1::Disable);
         val.write_to_cache(TcrEl1::T0SZ, t0sz);
 
         TcrEl1::new().set(val.get());

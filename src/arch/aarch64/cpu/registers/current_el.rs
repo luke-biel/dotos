@@ -1,4 +1,4 @@
-use bitaccess::{bitaccess, FieldAccess};
+use bitaccess::{bitaccess, FieldAccess, ReadBits};
 use derive_more::Display;
 
 #[derive(FieldAccess, PartialEq, Display)]
@@ -19,4 +19,8 @@ pub enum CurrentEl {
     #[bits(0..4)]
     #[variants(ExceptionLevel)]
     Status,
+}
+
+pub unsafe fn current_el() -> ExceptionLevel {
+    CurrentEl.read(CurrentEl::Status).variant()
 }

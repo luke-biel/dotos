@@ -19,6 +19,7 @@
 #![feature(once_cell)]
 
 use arch::arch_impl::cpu::exception::current_privilege_level;
+use bitaccess::ReadBits;
 
 use crate::{
     arch::arch_impl::cpu::{
@@ -26,8 +27,7 @@ use crate::{
             asynchronous::{unmask_irq, ExceptionStatus},
             init_exception_handling,
         },
-        park,
-        registers::current_el::CurrentEl,
+        registers::current_el::{current_el, CurrentEl},
     },
     common::{
         driver::DriverManager,
@@ -107,10 +107,7 @@ unsafe fn kernel_main() -> ! {
 }
 
 fn kernel_proc() {
-    crate::info!(
-        "Kernel process started {}",
-        CurrentEl::new().read(CurrentEl::Status).variant()
-    );
+    crate::info!("Kernel process started {}", unsafe { current_el() });
     if let Err(e) = move_to_user_mode(test1 as usize as u64) {
         crate::error!("Failed to move to user mode, {}", e);
     }

@@ -2,7 +2,7 @@ use core::{cell::UnsafeCell, fmt, fmt::Formatter};
 
 use crate::{
     arch::{
-        aarch64::cpu::registers::current_el,
+        aarch64::cpu::registers::current_el::current_el,
         arch_impl::cpu::registers::current_el::ExceptionLevel,
     },
     common::exception::PrivilegeLevel,

@@ -50,16 +50,16 @@ checksum = "dcb6dd1c2376d2e096796e234a70e17e94cc2d5d54ff8ce42b28cef1d0d359a4"
 
 [[package]]
 name = "bitaccess"
-version = "0.3.0"
-source = "git+https://github.com/luke-biel/bitaccess#06a4a431bf6e7557643dad2b409258308b96bc1f"
+version = "0.4.0"
+source = "git+https://github.com/luke-biel/bitaccess#1f33bc8949da9a3aeb5bb955731de57d3062b4a2"
 dependencies = [
  "bitaccess_macros",
 ]
 
 [[package]]
 name = "bitaccess_macros"
-version = "0.3.0"
-source = "git+https://github.com/luke-biel/bitaccess#06a4a431bf6e7557643dad2b409258308b96bc1f"
+version = "0.4.0"
+source = "git+https://github.com/luke-biel/bitaccess#1f33bc8949da9a3aeb5bb955731de57d3062b4a2"
 dependencies = [
  "convert_case",
  "proc-macro-error",
@@ -270,9 +270,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.29"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9f5105d4fdaab20335ca9565e106a5d9b82b6219b5ba735731124ac6711d23d"
+checksum = "edc3358ebc67bc8b7fa0c007f945b0b18226f78437d61bec735a9eb96b61ee70"
 dependencies = [
  "unicode-xid",
 ]
