@@ -1,10 +1,11 @@
+use registers::mpidr_el1::core_id_el1;
+
 use crate::{
     arch::arch_impl::cpu::{
         instructions::{eret, wfe},
         registers::{
             cnthctl_el2::CnthctlEl2,
             cntvoff_el2::CntvoffEl2,
-            core_id_el1,
             current_el::{current_el, ExceptionLevel},
             elr_el2::ElrEl2,
             hcr_el2::HcrEl2,
