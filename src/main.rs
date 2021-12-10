@@ -17,26 +17,23 @@
 #![feature(const_mut_refs)]
 #![feature(const_maybe_uninit_write)]
 #![feature(once_cell)]
+#![feature(asm_const)]
 
 use arch::arch_impl::cpu::exception::current_privilege_level;
-use bitaccess::ReadBits;
 
 use crate::{
-    arch::{
-        aarch64::syscall::_write,
-        arch_impl::cpu::{
-            exception::{
-                asynchronous::{unmask_irq, ExceptionStatus},
-                init_exception_handling,
-            },
-            park,
-            registers::current_el::{current_el, CurrentEl},
+    arch::arch_impl::cpu::{
+        exception::{
+            asynchronous::{unmask_irq, ExceptionStatus},
+            init_exception_handling,
         },
+        park,
+        registers::current_el::current_el,
     },
     common::{
         driver::DriverManager,
         memory::mmu::{map_kernel_binary, MemoryManagementUnit},
-        scheduler::{move_to_user_mode, spawn_process, SCHEDULER},
+        scheduler::{spawn_process, SCHEDULER},
         state::KernelState,
         statics,
         sync::ReadWriteLock,
@@ -104,20 +101,13 @@ unsafe fn kernel_main() -> ! {
 
     SCHEDULER.init();
 
-    spawn_process(kernel_proc as usize as u64, 2, 0, 0).expect("spawn test1 process");
+    spawn_process(kernel_proc as usize as u64, 0).expect("spawn test1 process");
     loop {
         SCHEDULER.schedule()
     }
 }
 
-fn kernel_proc() {
-    crate::info!("Kernel process started {}", unsafe { current_el() });
-    if let Err(e) = move_to_user_mode(test1 as usize as u64) {
-        crate::error!("Failed to move to user mode, {}", e);
-    }
-}
-
-fn test1() -> ! {
-    unsafe { _write(b"abc".as_ptr(), 3) }
-    unsafe { park() }
+unsafe fn kernel_proc() {
+    crate::info!("Kernel process started {}", current_el());
+    park();
 }

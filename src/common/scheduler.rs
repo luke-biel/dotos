@@ -1,15 +1,12 @@
 use core::mem::size_of;
 
 use crate::{
-    arch::{
-        aarch64::memory::mmu::Granule64KB,
-        arch_impl::{
-            cpu::exception::{
-                asynchronous::{mask_irq, unmask_irq},
-                return_from_fork,
-            },
-            task::{CpuContext, PtRegs},
+    arch::arch_impl::{
+        cpu::exception::{
+            asynchronous::{mask_irq, unmask_irq},
+            return_from_fork,
         },
+        task::{CpuContext, PtRegs},
     },
     bsp::device_driver::WrappedPointer,
     common::{
@@ -42,7 +39,6 @@ pub static mut INIT_TASK: Task = Task {
     priority: 0,
     preempt_count: 0,
     stack: 0,
-    flags: 0,
 };
 
 struct SchedulerInner<const C: usize> {
@@ -95,7 +91,7 @@ impl<const C: usize> SchedulerInner<C> {
                 Some((idx, ptr)) if ptr.counter > 0 => break idx,
                 _ => {
                     for task in self.tasks.iter_mut() {
-                        task.counter = (task.counter >> 1) + task.priority
+                        task.counter = task.priority
                     }
                 }
             }
@@ -173,13 +169,6 @@ impl<const C: usize> Scheduler<C> {
             mask_irq();
         })
     }
-
-    pub fn current(&self) -> WrappedPointer<Task> {
-        let current = self
-            .inner
-            .map_locked(|inner| inner.current().unwrap().addr());
-        unsafe { WrappedPointer::new(current) }
-    }
 }
 
 impl<const C: usize> TickCallbackHandler for Scheduler<C> {
@@ -192,27 +181,17 @@ fn cpu_switch_to(last: &Task, new: &Task) {
     unsafe { Task::cpu_switch_to(last, new) }
 }
 
-pub unsafe fn spawn_process(f: u64, flags: u64, arg: u64, stack: u64) -> Result<(), &'static str> {
+pub unsafe fn spawn_process(f: u64, arg: u64) -> Result<(), &'static str> {
     SCHEDULER.preempt_disable();
     let page = next_free_page()?;
     let mut task: WrappedPointer<Task> = WrappedPointer::new(page.addr());
 
-    let mut child_regs = pt_regs(&task);
+    let child_regs = pt_regs(&task);
     (child_regs.addr() as *mut PtRegs).write_bytes(0, 1);
     (task.addr() as *mut CpuContext).write_bytes(0, 1); // This works on behalf of CpuContext being first field
 
-    if flags & 2 > 0 {
-        task.context.x19 = f;
-        task.context.x20 = arg;
-    } else {
-        let cur_regs = pt_regs(&SCHEDULER.current());
-        (child_regs.addr() as *mut PtRegs).write_volatile(cur_regs.clone());
-        child_regs.registers[0] = 0;
-        child_regs.sp = stack + Granule64KB::SIZE as u64;
-        task.stack = stack;
-    }
-
-    task.flags = flags;
+    task.context.x19 = f;
+    task.context.x20 = arg;
 
     task.priority = 10;
     task.state = TaskState::Running;
@@ -224,25 +203,6 @@ pub unsafe fn spawn_process(f: u64, flags: u64, arg: u64, stack: u64) -> Result<
 
     SCHEDULER.register_new_waiting_task(task);
     SCHEDULER.preempt_enable();
-
-    Ok(())
-}
-
-pub fn move_to_user_mode(f: u64) -> Result<(), &'static str> {
-    let mut current = SCHEDULER.current();
-
-    let mut regs = unsafe { pt_regs(&current) };
-
-    unsafe { (regs.addr() as *mut PtRegs).write_bytes(0, 1) };
-
-    regs.pc = f;
-    regs.pstate = 0;
-    let stack = next_free_page()?;
-
-    regs.sp = (stack.addr() + Granule64KB::SIZE) as u64;
-    current.stack = stack.addr() as u64;
-
-    crate::info!("stack {} {:x?} {:x?}, {:x}", stack, regs, current, f);
 
     Ok(())
 }

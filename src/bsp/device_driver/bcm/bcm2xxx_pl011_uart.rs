@@ -333,9 +333,10 @@ impl IRQHandler for PL011Uart {
             inner.registers.icr.write(ICR::ALL::CLEAR);
 
             if pending.matches_any(MIS::RXMIS::SET + MIS::RTMIS::SET) {
-                while let Some(c) = inner.read_char(false) {
-                    inner.write_char(c)
-                }
+                while inner.read_char(false).is_some() {}
+                // while let Some(c) = inner.read_char(false) {
+                //    inner.write_char(c)
+                // }
             }
         });
 

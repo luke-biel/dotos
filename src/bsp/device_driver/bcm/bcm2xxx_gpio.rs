@@ -103,12 +103,12 @@ impl GpioInner {
         const DELAY: Duration = Duration::from_micros(100);
 
         self.registers.gppud.write(GPPUD::PUD::Off);
-        CLOCK_TIMER.sleep(DELAY);
+        CLOCK_TIMER.map_locked(|t| t.sleep(DELAY));
 
         self.registers
             .gppudclk0
             .write(GPPUDCLK0::PUDCLK15::AssertClock + GPPUDCLK0::PUDCLK14::AssertClock);
-        CLOCK_TIMER.sleep(DELAY);
+        CLOCK_TIMER.map_locked(|t| t.sleep(DELAY));
 
         self.registers.gppud.write(GPPUD::PUD::Off);
         self.registers.gppudclk0.set(0);

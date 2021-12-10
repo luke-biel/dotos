@@ -4,7 +4,7 @@ use bitaccess::ReadBits;
 
 use crate::{
     arch::arch_impl::cpu::{
-        exception::asynchronous::{local_irq_restore, local_irq_save},
+        exception::asynchronous::{local_irq_restore, local_irq_save, mask_irq},
         registers::daif::Daif,
     },
     common::statics,
@@ -54,6 +54,7 @@ impl<T: Sized> Mutex for IRQSafeNullLock<T> {
         let data = unsafe { &mut *self.data.get() };
 
         let state = local_irq_save();
+        mask_irq();
         let res = f(data);
         local_irq_restore(state);
 

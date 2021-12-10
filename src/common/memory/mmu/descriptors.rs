@@ -16,6 +16,7 @@ pub enum MemoryAttributes {
 }
 
 #[derive(Copy, Clone, Debug, Display)]
+#[allow(non_camel_case_types)]
 pub enum AccessPermissions {
     RX,
     RW,

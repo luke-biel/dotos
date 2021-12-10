@@ -36,8 +36,9 @@ macro_rules! println {
 macro_rules! log {
     ($log_kw:expr, $log_lv:expr, $s:expr) => {{
         use crate::common::time::clock::ClockManager as _;
+        use crate::common::sync::Mutex;
 
-        let ts = $crate::common::statics::CLOCK_TIMER.uptime();
+        let ts = $crate::common::statics::CLOCK_TIMER.map_locked(|t| t.uptime());
         let sts = ts.subsec_micros();
 
         #[allow(unused_unsafe)]
@@ -57,8 +58,9 @@ macro_rules! log {
     }};
     ($log_kw:expr, $log_lv:expr, $fs:expr, $($arg:tt)*) => {{
         use crate::common::time::clock::ClockManager as _;
+        use crate::common::sync::Mutex;
 
-        let ts = $crate::common::statics::CLOCK_TIMER.uptime();
+        let ts = $crate::common::statics::CLOCK_TIMER.map_locked(|t| t.uptime());
         let sts = ts.subsec_micros();
 
         #[allow(unused_unsafe)]

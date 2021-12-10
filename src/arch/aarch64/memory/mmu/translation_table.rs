@@ -1,7 +1,7 @@
 use core::{convert, fmt::Formatter};
 
 use tock_registers::{
-    interfaces::{ReadWriteable, Readable, Writeable},
+    interfaces::{Readable, Writeable},
     register_bitfields,
     registers::InMemoryRegister,
 };
