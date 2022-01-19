@@ -4,8 +4,8 @@ use derive_more::Display;
 #[bitaccess(
     base_type = u64,
     kind = read_write,
-    read_via = r#"unsafe { asm!("mrs {}, tcr_el1", out(reg) value, options(nostack, nomem)); }"#,
-    write_via = r#"unsafe { asm!("msr tcr_el1, {}", in(reg) value, options(nostack, nomem)); }"#
+    read_via = r#"unsafe { core::arch::asm!("mrs {}, tcr_el1", out(reg) value, options(nostack, nomem)); }"#,
+    write_via = r#"unsafe { core::arch::asm!("msr tcr_el1, {}", in(reg) value, options(nostack, nomem)); }"#
 )]
 pub enum TcrEl1 {
     #[bit(59)]

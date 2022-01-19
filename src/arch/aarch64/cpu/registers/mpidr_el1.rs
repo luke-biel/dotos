@@ -3,7 +3,7 @@ use bitaccess::{bitaccess, ReadBits};
 #[bitaccess(
     base_type = u64,
     kind = read_only,
-    read_via = r#"unsafe { asm!("mrs {}, mpidr_el1", out(reg) value, options(nomem, nostack)); }"#
+    read_via = r#"unsafe { core::arch::asm!("mrs {}, mpidr_el1", out(reg) value, options(nomem, nostack)); }"#
 )]
 pub enum MpidrEl1 {
     #[bits(0..2)]

@@ -1,4 +1,4 @@
-use core::intrinsics::unlikely;
+use core::{arch::asm, intrinsics::unlikely};
 
 use crate::{
     arch::arch_impl::{

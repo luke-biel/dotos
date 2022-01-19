@@ -1,4 +1,9 @@
-use core::{cell::UnsafeCell, fmt, fmt::Formatter};
+use core::{
+    arch::{asm, global_asm},
+    cell::UnsafeCell,
+    fmt,
+    fmt::Formatter,
+};
 
 use crate::{
     arch::{

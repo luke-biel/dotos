@@ -1,3 +1,5 @@
+use core::arch::global_asm;
+
 use crate::common::task::Task;
 
 global_asm!(include_str!("task.s"));

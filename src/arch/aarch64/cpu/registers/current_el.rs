@@ -13,7 +13,7 @@ pub enum ExceptionLevel {
 #[bitaccess(
     base_type = u64,
     kind = read_only,
-    read_via = r#"unsafe { asm!("mrs {}, currentel", out(reg) value, options(nomem, nostack)) }"#
+    read_via = r#"unsafe { core::arch::asm!("mrs {}, currentel", out(reg) value, options(nomem, nostack)) }"#
 )]
 pub enum CurrentEl {
     #[bits(0..4)]

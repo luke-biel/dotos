@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use core::arch::asm;
+
 use bitaccess::{bitaccess, FieldAccess};
 use derive_more::Display;
 
@@ -13,8 +15,8 @@ pub enum Mask {
 #[bitaccess(
     base_type = u64,
     kind = read_write,
-    read_via = r#"unsafe { asm!("mrs {}, daif", out(reg) value, options(nostack, nomem)); }"#,
-    write_via = r#"unsafe { asm!("msr daif, {}", in(reg) value, options(nostack, nomem)) }"#
+    read_via = r#"unsafe { core::arch::asm!("mrs {}, daif", out(reg) value, options(nostack, nomem)); }"#,
+    write_via = r#"unsafe { core::arch::asm!("msr daif, {}", in(reg) value, options(nostack, nomem)) }"#
 )]
 pub enum Daif {
     #[bit(9)]

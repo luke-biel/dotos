@@ -1,4 +1,4 @@
-use core::time::Duration;
+use core::{arch::asm, time::Duration};
 
 use crate::common::time::clock::ClockManager;
 

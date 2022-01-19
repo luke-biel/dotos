@@ -1,4 +1,4 @@
-use core::hint::unreachable_unchecked;
+use core::{arch::asm, hint::unreachable_unchecked};
 
 pub unsafe fn wfe() {
     asm!("wfe")

@@ -1,3 +1,5 @@
+use core::arch::asm;
+
 use registers::mpidr_el1::core_id_el1;
 
 use crate::{

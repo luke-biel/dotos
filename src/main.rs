@@ -1,11 +1,9 @@
 #![no_std]
 #![no_main]
-#![feature(asm)]
 #![feature(crate_visibility_modifier)]
 #![feature(core_intrinsics)]
 #![feature(panic_info_message)]
 #![feature(format_args_nl)]
-#![feature(global_asm)]
 #![feature(const_trait_impl)]
 #![feature(const_default_impls)]
 #![feature(min_specialization)]
@@ -20,6 +18,7 @@
 #![feature(asm_const)]
 
 use arch::arch_impl::cpu::exception::current_privilege_level;
+use common::sync::ReadWriteLock;
 
 use crate::{
     arch::arch_impl::cpu::{
@@ -36,7 +35,6 @@ use crate::{
         scheduler::{spawn_process, SCHEDULER},
         state::KernelState,
         statics,
-        sync::ReadWriteLock,
         time::scheduling::SchedulingManager,
     },
     log::init_logging,
